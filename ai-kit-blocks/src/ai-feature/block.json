@@ -136,7 +136,7 @@
       "type": "string",
       "default": "selector {\n\t\n}"
     },
-    "styleText": {
+    "innerCSS": {
       "type": "string",
       "default": ":host {\n\t\n}\n.ai-feature-root {\n\t\n}"
     },

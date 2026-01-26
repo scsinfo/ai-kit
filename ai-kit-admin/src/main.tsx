@@ -31,6 +31,7 @@ import {
 import {
   IconAlertCircle,
   IconApi,
+  IconMessage,
   IconCheck,
   IconExclamationCircle,
   IconInfoCircle,
@@ -44,8 +45,8 @@ import { useSelect } from "@wordpress/data";
 import { __ } from "@wordpress/i18n";
 import { useCallback, useEffect, useState } from "react";
 import DocSidebar from "./DocSidebar";
-import { AiKitOnboarding } from "./onboarding";
 import { NoRegistrationRequiredBanner } from "./noregistration";
+import { AiKitOnboarding } from "./onboarding";
 
 import { SiteSettings, SubscriptionType } from "@smart-cloud/wpsuite-core";
 
@@ -53,22 +54,22 @@ import "jquery";
 
 import classes from "./main.module.css";
 
-import mediaModal from "./assets/onboarding/media-modal.jpg";
-import mediaGridBulkModal from "./assets/onboarding/media-grid-bulk-modal.jpg";
-import mediaAttachmentEdit from "./assets/onboarding/media-attachment-edit.jpg";
-import sidebarPostMetadata from "./assets/onboarding/sidebar-post-metadata.jpg";
-import sidebarTextGeneration from "./assets/onboarding/sidebar-text-generation.jpg";
 import aiKitToolsToolbar from "./assets/onboarding/ai-kit-tools-toolbar.jpg";
 import exampleProofreadModal from "./assets/onboarding/example-proofread-modal.jpg";
-import exampleTranslateModal from "./assets/onboarding/example-translate-modal.jpg";
 import exampleRewriteModal from "./assets/onboarding/example-rewrite-modal.jpg";
-import gutenbergSeoMetadataPanel from "./assets/onboarding/gutenberg-seo-image-metadata-panel.jpg"; //
-import proFrontendBlocks from "./assets/onboarding/pro-frontend-blocks.jpg";
-import proFrontendBlocksOptions from "./assets/onboarding/pro-frontend-blocks-options.jpg";
-import shortcode from "./assets/onboarding/shortcode.jpg";
-import shortcodeFrontend from "./assets/onboarding/shortcode-frontend.jpg";
+import exampleTranslateModal from "./assets/onboarding/example-translate-modal.jpg";
 import featuresApi from "./assets/onboarding/features-api.jpg";
+import gutenbergSeoMetadataPanel from "./assets/onboarding/gutenberg-seo-image-metadata-panel.jpg"; //
+import mediaAttachmentEdit from "./assets/onboarding/media-attachment-edit.jpg";
+import mediaGridBulkModal from "./assets/onboarding/media-grid-bulk-modal.jpg";
+import mediaModal from "./assets/onboarding/media-modal.jpg";
+import proFrontendBlocksOptions from "./assets/onboarding/pro-frontend-blocks-options.jpg";
+import proFrontendBlocks from "./assets/onboarding/pro-frontend-blocks.jpg";
 import renderFeature from "./assets/onboarding/render-feature.jpg";
+import shortcodeFrontend from "./assets/onboarding/shortcode-frontend.jpg";
+import shortcode from "./assets/onboarding/shortcode.jpg";
+import sidebarPostMetadata from "./assets/onboarding/sidebar-post-metadata.jpg";
+import sidebarTextGeneration from "./assets/onboarding/sidebar-text-generation.jpg";
 
 interface Account {
   accountId: string;
@@ -121,6 +122,14 @@ const ApiSettingsEditor = lazy(
     ),
 );
 
+const ChatbotSettingsEditor = lazy(
+  () =>
+    import(
+      process.env.WPSUITE_PREMIUM
+        ? "./paid-features/ChatbotSettingsEditor"
+        : "./free-features/NullEditor"
+    ),
+);
 const SettingsTitle = () => {
   const isMobile = useMediaQuery(
     `(max-width: ${DEFAULT_THEME.breakpoints.sm})`,
@@ -235,9 +244,9 @@ const Main = (props: MainProps) => {
   const [formConfig, setFormConfig] = useState<AiKitConfig>();
 
   const [savingSettings, setSavingSettings] = useState<boolean>(false);
-  const [activePage, setActivePage] = useState<"general" | "api-settings">(
-    "general",
-  );
+  const [activePage, setActivePage] = useState<
+    "general" | "api-settings" | "chatbot-settings"
+  >("general");
 
   // Add media query for responsive design
   const isMobile = useMediaQuery(
@@ -385,7 +394,7 @@ const Main = (props: MainProps) => {
         setSavingSettings(false);
       }
     },
-    [settingsFormData, nonce],
+    [nonce, settingsFormData],
   );
 
   const InfoLabelComponent = useCallback(
@@ -454,6 +463,17 @@ const Main = (props: MainProps) => {
         value: "api-settings",
         label: __("API Settings", TEXT_DOMAIN),
         icon: <IconApi size={16} stroke={1.5} />,
+        badge: (
+          <Badge variant="light" color="red" ml="4px" miw={35}>
+            PRO
+          </Badge>
+        ),
+        disabled: paidSettingsDisabled,
+      },
+      {
+        value: "chatbot-settings",
+        label: __("Chatbot Settings", TEXT_DOMAIN),
+        icon: <IconMessage size={16} stroke={1.5} />,
         badge: (
           <Badge variant="light" color="red" ml="4px" miw={35}>
             PRO
@@ -652,7 +672,9 @@ const Main = (props: MainProps) => {
           value={activePage}
           orientation={isMobile ? "horizontal" : "vertical"}
           onChange={(value) =>
-            setActivePage(value as "general" | "api-settings")
+            setActivePage(
+              value as "general" | "api-settings" | "chatbot-settings",
+            )
           }
           w="100%"
         >
@@ -876,6 +898,54 @@ const Main = (props: MainProps) => {
                 siteKey={siteKey!}
                 onSave={handleConfigSave}
                 InfoLabelComponent={InfoLabelComponent}
+              />
+            )}
+          </Tabs.Panel>
+
+          <Tabs.Panel value="chatbot-settings" w="100%">
+            <Title order={2} mb="md">
+              <InfoLabelComponent
+                text="Chatbot Settings"
+                scrollToId="chatbot-settings"
+              />
+            </Title>
+
+            <Text mb={0}>
+              Configure how AI-Kit Chatbot behaves on your site — appearance,
+              position, and default messages.
+            </Text>
+
+            <Text mb="md">
+              Use Preview to instantly try your current settings without saving.
+              While previewing, the live site button is hidden and a preview
+              button appears instead — to apply these settings on your site,
+              enable the chatbot and Save your changes.
+            </Text>
+
+            {(formConfig ?? decryptedConfig)?.subscriptionType !==
+              "PROFESSIONAL" && (
+              <Alert
+                variant="light"
+                color="yellow"
+                title="PRO Feature"
+                icon={<IconExclamationCircle />}
+                mb="md"
+              >
+                This feature is available in the <strong>PRO</strong> version of
+                the plugin. You can save your settings but they will not take
+                effect until you upgrade your subscription.
+              </Alert>
+            )}
+            {(formConfig ?? decryptedConfig) && (
+              <ChatbotSettingsEditor
+                apiUrl={apiUrl}
+                config={formConfig ?? decryptedConfig}
+                accountId={accountId!}
+                siteId={siteId!}
+                siteKey={siteKey!}
+                onSave={handleConfigSave}
+                InfoLabelComponent={InfoLabelComponent}
+                store={store}
               />
             )}
           </Tabs.Panel>

@@ -13,7 +13,11 @@ import {
 } from "@wordpress/data";
 import { I18n } from "aws-amplify/utils";
 import { getAiKitPlugin } from "./runtime";
-import { type AiModePreference, type BackendTransport } from "./types";
+import {
+  AiChatbotProps,
+  type AiModePreference,
+  type BackendTransport,
+} from "./types";
 
 export interface AiKitConfig {
   mode?: AiModePreference;
@@ -21,6 +25,9 @@ export interface AiKitConfig {
   backendApiName?: string;
   backendBaseUrl?: string;
   subscriptionType?: SubscriptionType;
+
+  enableChatbot?: boolean;
+  chatbot?: AiChatbotProps;
 }
 
 let siteSettings: SiteSettings;
@@ -60,6 +67,14 @@ export const sanitizeAiKitConfig = (input: unknown): AiKitConfig => {
     out.subscriptionType = v.subscriptionType as SubscriptionType;
   }
 
+  if (typeof v.enableChatbot === "boolean") {
+    out.enableChatbot = v.enableChatbot;
+  }
+
+  if (typeof v.chatbot === "object" && v.chatbot !== null) {
+    out.chatbot = v.chatbot as AiChatbotProps;
+  }
+
   return out;
 };
 
@@ -74,11 +89,11 @@ const getCustomTranslations = async (): Promise<CustomTranslations | null> => {
       aiKit.settings.customTranslationsUrl +
         (aiKit.settings.customTranslationsUrl.includes("?") ? "&" : "?") +
         "t=" +
-        siteSettings.lastUpdate
+        siteSettings.lastUpdate,
     )
       .then((response) => (response.ok ? response.text() : null))
       .then((response) =>
-        response ? (JSON.parse(response) as CustomTranslations) : null
+        response ? (JSON.parse(response) as CustomTranslations) : null,
       )
       .catch(() => null);
   }
@@ -91,6 +106,7 @@ const getDefaultState = async (): Promise<State> => {
 
   return {
     config: config,
+    showChatbotPreview: false,
     language: undefined,
     direction: undefined,
     customTranslations: customTranslations,
@@ -98,6 +114,13 @@ const getDefaultState = async (): Promise<State> => {
 };
 
 const actions = {
+  setShowChatbotPreview(showChatbotPreview: boolean) {
+    return {
+      type: "SET_SHOW_CHATBOT_PREVIEW",
+      showChatbotPreview,
+    };
+  },
+
   setLanguage(language: string | undefined | null) {
     if (!language || language === "system") {
       I18n.setLanguage("");
@@ -122,6 +145,9 @@ const selectors = {
   getConfig(state: State) {
     return state.config;
   },
+  isShowChatbotPreview(state: State) {
+    return state.showChatbotPreview;
+  },
   getCustomTranslations(state: State) {
     return state.customTranslations;
   },
@@ -144,6 +170,7 @@ export interface CustomTranslations {
 
 export interface State {
   config: AiKitConfig | null;
+  showChatbotPreview: boolean;
   language: string | undefined | null;
   direction: "ltr" | "rtl" | "auto" | undefined | null;
   customTranslations: CustomTranslations | null;
@@ -153,6 +180,7 @@ export type Store = StoreDescriptor;
 
 export type StoreSelectors = {
   getConfig(): AiKitConfig | null;
+  isShowChatbotPreview(): boolean;
   getCustomTranslations(): CustomTranslations | null;
   getLanguage(): string | undefined | null;
   getDirection(): "ltr" | "rtl" | "auto" | undefined | null;
@@ -182,6 +210,12 @@ export const createStore = async (): Promise<Store> => {
             ...state,
             direction: action.direction,
           };
+
+        case "SET_SHOW_CHATBOT_PREVIEW":
+          return {
+            ...state,
+            showChatbotPreview: action.showChatbotPreview,
+          };
       }
       return state;
     },
@@ -199,8 +233,8 @@ export const observeStore = (
   selector: (state: State) => boolean | number | string | null | undefined,
   onChange: (
     nextValue: boolean | number | string | null | undefined,
-    previousValue: boolean | number | string | null | undefined
-  ) => void
+    previousValue: boolean | number | string | null | undefined,
+  ) => void,
 ) => {
   let currentValue: boolean | number | string | null | undefined;
 

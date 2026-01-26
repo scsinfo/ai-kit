@@ -1,3 +1,4 @@
+import { generateColors } from "@mantine/colors-generator";
 import {
   colorsTuple,
   createTheme,
@@ -13,13 +14,24 @@ import {
 } from "@smart-cloud/ai-kit-core";
 import { useSelect } from "@wordpress/data";
 import { I18n } from "aws-amplify/utils";
-import { type ComponentType, useMemo, useState } from "react";
+import { type ComponentType, useCallback, useMemo, useState } from "react";
 import { ShadowBoundary } from "./ShadowBoundary";
 
 export type AiKitShellInjectedProps = {
   language?: string;
   rootElement: HTMLElement;
 };
+
+function hashStringDjb2(str: string): string {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+  }
+  // unsigned + base36
+  return (hash >>> 0).toString(36);
+}
+
+const STYLE_TEXT_ID = "ai-kit-style-text";
 
 export function withAiKitShell<P extends object>(
   RootComponent: ComponentType<P & AiKitShellInjectedProps>,
@@ -36,7 +48,7 @@ export function withAiKitShell<P extends object>(
       primaryColor,
       primaryShade,
       className,
-      styleText,
+      innerCSS,
       language,
       direction,
     } = { ...props, ...propOverrides } as AiWorkerProps & P;
@@ -96,9 +108,15 @@ export function withAiKitShell<P extends object>(
     if (colors) {
       customColors = {};
       Object.keys(colors).forEach((c) => {
-        customColors![c] = colorsTuple(colors[c]);
+        try {
+          customColors![c] = generateColors(colors[c]);
+        } catch {
+          customColors![c] = colorsTuple(colors[c]);
+        }
       });
     }
+
+    console.log("withAiKitShell rendered", { customColors });
 
     const theme = createTheme({
       respectReducedMotion: true,
@@ -159,12 +177,43 @@ export function withAiKitShell<P extends object>(
       },
     });
 
+    const innerCSSHash = useMemo(() => {
+      return innerCSS ? hashStringDjb2(innerCSS) : "";
+    }, [innerCSS]);
+
+    const injectStyle = useCallback(
+      (rootElement: HTMLDivElement) => {
+        const existingStyle = rootElement.ownerDocument.getElementById(
+          STYLE_TEXT_ID,
+        ) as HTMLStyleElement | null;
+
+        if (innerCSS) {
+          if (!existingStyle) {
+            const s = rootElement.ownerDocument.createElement("style");
+            s.id = STYLE_TEXT_ID;
+            s.setAttribute("data-hash", innerCSSHash);
+            s.textContent = innerCSS;
+            rootElement.appendChild(s);
+          } else {
+            const prevHash = existingStyle.getAttribute("data-hash") || "";
+            if (prevHash !== innerCSSHash) {
+              existingStyle.setAttribute("data-hash", innerCSSHash);
+              existingStyle.textContent = innerCSS;
+            }
+          }
+        } else if (existingStyle) {
+          existingStyle.remove();
+        }
+      },
+      [innerCSS, innerCSSHash],
+    );
+
     return (
       <ShadowBoundary
         mode={variation === "modal" && !showOpenButton ? "overlay" : "local"}
+        variation={variation}
         overlayRootId="ai-kit-overlay-root"
         stylesheets={stylesheets}
-        styleText={styleText}
         className={className}
         rootElementId={
           variation === "modal" && !showOpenButton
@@ -173,6 +222,7 @@ export function withAiKitShell<P extends object>(
         }
       >
         {({ rootElement }) => {
+          injectStyle(rootElement);
           rootElement.setAttribute(
             "data-ai-kit-variation",
             variation || "default",
@@ -182,16 +232,23 @@ export function withAiKitShell<P extends object>(
             rootElement.setAttribute("lang", currentLanguage);
           }
 
+          const resolved =
+            colorMode === "auto"
+              ? window.matchMedia?.("(prefers-color-scheme: dark)")?.matches
+                ? "dark"
+                : "light"
+              : colorMode;
+
           return (
             <DirectionProvider initialDirection={currentDirection}>
               <MantineProvider
-                defaultColorScheme={colorMode}
+                forceColorScheme={resolved}
                 theme={theme}
-                cssVariablesSelector={`#${rootElement.id}`}
                 getRootElement={() => rootElement as unknown as HTMLElement}
               >
                 <RootComponent
                   {...props}
+                  colorMode={resolved}
                   language={currentLanguage}
                   rootElement={rootElement}
                 />

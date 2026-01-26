@@ -16,6 +16,8 @@ import type {
   WriteArgs,
   WriteResult,
   Features,
+  ChatMessageArgs,
+  FeedbackMessageArgs,
 } from "../types";
 
 export const getWriteOptions: (
@@ -96,5 +98,13 @@ export const getPromptOptions: (
 ): Promise<LanguageModelCreateCoreOptions> => Promise.resolve(args);
 export const prompt: Features["prompt"] = async (
   _args: PromptArgs,
+  _options?: FeatureOptions,
+) => Promise.resolve<PromptResult>({ result: "" });
+export const sendChatMessage: Features["sendChatMessage"] = async (
+  _args: ChatMessageArgs,
+  _options?: FeatureOptions,
+) => Promise.resolve<PromptResult>({ result: "" });
+export const sendFeedbackMessage: Features["sendFeedbackMessage"] = async (
+  _args: FeedbackMessageArgs,
   _options?: FeatureOptions,
 ) => Promise.resolve<PromptResult>({ result: "" });

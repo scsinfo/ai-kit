@@ -12,12 +12,11 @@ export type ShadowBoundaryProps = {
   /** Optional class name applied to the host element. */
   className?: string;
 
-  /** Optional raw CSS text injected into the shadow root (as <style>). */
-  styleText?: string;
-
   /** ID of the element inside the shadow root used as the portal target. */
   rootElementId: string;
 
+  /** Variation of the shadow boundary behavior. */
+  variation?: "default" | "modal";
   /**
    * Where to create the shadow root:
    * - "local": attach shadow to this component's host element (keeps layout positioning).
@@ -87,22 +86,9 @@ function installAiKitPropertyRegistry() {
   doc.head.appendChild(style);
 }
 
-// tiny stable hash to detect styleText changes without forcing huge deps churn
-function hashStringDjb2(str: string): string {
-  let hash = 5381;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
-  }
-  // unsigned + base36
-  return (hash >>> 0).toString(36);
-}
-
-const STYLE_TEXT_ID = "ai-kit-style-text";
-
 export function ShadowBoundary({
   stylesheets,
   className,
-  styleText,
   children,
   rootElementId,
   mode = "local",
@@ -118,10 +104,6 @@ export function ShadowBoundary({
     const all = [...stylesheets];
     return all.join("|");
   }, [stylesheets]);
-
-  const styleTextHash = useMemo(() => {
-    return styleText ? hashStringDjb2(styleText) : "";
-  }, [styleText]);
 
   useLayoutEffect(() => {
     if (!hostRef.current) return;
@@ -179,17 +161,11 @@ export function ShadowBoundary({
     const applyScheme = () => {
       host.setAttribute("data-ai-kit-variation", readVariation() || "default");
       host.setAttribute("data-mantine-color-scheme", readScheme() || "auto");
-      if (className) {
-        host.className = className;
-      }
-      host.style.setProperty("outline", "none");
-      host.style.setProperty("box-shadow", "none");
-      host.style.setProperty("--mantine-color-body", "transparent");
     };
 
     applyScheme();
 
-    // Kövesd, ha a host dokumentumban változik a séma
+    // 4) Watch for scheme/variation changes
     const mo = new MutationObserver(applyScheme);
     mo.observe(rootEl, {
       attributes: true,
@@ -210,29 +186,6 @@ export function ShadowBoundary({
       stylesKey ? stylesKey.split("|") : [],
     );
 
-    // 6) Optional: inject raw style text into the shadow root
-    const existingStyle = shadow.getElementById(
-      STYLE_TEXT_ID,
-    ) as HTMLStyleElement | null;
-
-    if (styleText) {
-      if (!existingStyle) {
-        const s = doc.createElement("style");
-        s.id = STYLE_TEXT_ID;
-        s.setAttribute("data-hash", styleTextHash);
-        s.textContent = styleText;
-        rootEl.appendChild(s);
-      } else {
-        const prevHash = existingStyle.getAttribute("data-hash") || "";
-        if (prevHash !== styleTextHash) {
-          existingStyle.setAttribute("data-hash", styleTextHash);
-          existingStyle.textContent = styleText;
-        }
-      }
-    } else if (existingStyle) {
-      existingStyle.remove();
-    }
-
     setShadowRoot(shadow);
     setPortalTarget(rootEl);
 
@@ -240,7 +193,7 @@ export function ShadowBoundary({
       mo.disconnect();
       mq?.removeEventListener?.("change", onMq);
     };
-  }, [mode, overlayRootId, rootElementId, stylesKey, styleText, styleTextHash]);
+  }, [mode, overlayRootId, rootElementId, stylesKey]);
 
   const emotionCache = useMemo(() => {
     if (!portalTarget) return null;
@@ -252,7 +205,15 @@ export function ShadowBoundary({
   }, [portalTarget, mode]);
 
   return (
-    <div ref={hostRef}>
+    <div
+      ref={hostRef}
+      className={className}
+      style={{
+        outline: "none",
+        boxShadow: "none",
+        backgroundColor: "transparent",
+      }}
+    >
       {portalTarget && shadowRoot && emotionCache
         ? createPortal(
             <CacheProvider value={emotionCache}>

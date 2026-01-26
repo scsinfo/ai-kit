@@ -144,6 +144,211 @@ const pages = {
       </Text>
     </>
   ),
+
+  "chatbot-settings": (
+    <>
+      <Title order={2} id="chatbot-settings">
+        <span className="highlightable">Chatbot Settings</span>
+      </Title>
+      <Text>
+        Configure how the on-site chatbot looks and behaves: its title and
+        language, theme, open button placement, and a few safety limits.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-preview">
+        <span className="highlightable">Preview</span>
+      </Title>
+      <Text>
+        Shows a live preview of your current settings. This is preview-only: to
+        apply changes on your site, enable the chatbot and save the settings.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-enable">
+        <span className="highlightable">Enable chatbot</span>
+      </Title>
+      <Text>
+        Turns the chatbot on or off for your site. When disabled, the chatbot UI
+        will not load on the frontend.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-title">
+        <span className="highlightable">Chat title</span>
+      </Title>
+      <Text>
+        The title shown at the top of the chat modal. If empty, the default
+        localized title is used.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-placeholder">
+        <span className="highlightable">Placeholder</span>
+      </Title>
+      <Text>
+        The placeholder text in the message input. Keep it short, as it appears
+        in a compact area.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-language">
+        <span className="highlightable">Language</span>
+      </Title>
+      <Text>
+        The UI language of the chatbot (labels, buttons, and default messages).
+        Leave empty to use the built-in defaults.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-direction">
+        <span className="highlightable">Direction</span>
+      </Title>
+      <Text>
+        Text direction of the chat UI. Use <strong>auto</strong> to follow the
+        document direction, or force <strong>LTR</strong> / <strong>RTL</strong>
+        for specific languages.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-history-storage">
+        <span className="highlightable">History storage</span>
+      </Title>
+      <List size="sm" spacing="xs" withPadding>
+        <List.Item>
+          <strong>Local storage</strong>: persists across page reloads and new
+          tabs in the same browser.
+        </List.Item>
+        <List.Item>
+          <strong>Session storage</strong>: persists during the current tab
+          session only.
+        </List.Item>
+        <List.Item>
+          <strong>No storage</strong>: does not persist history (every open is a
+          fresh chat).
+        </List.Item>
+      </List>
+      <Text mt="xs">
+        AI-Kit automatically clears stored chat history after 24 hours.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-color-mode">
+        <span className="highlightable">Color mode</span>
+      </Title>
+      <Text>
+        Controls whether the chatbot uses a light or dark theme. Use
+        <strong> auto</strong> to follow the site’s active color scheme.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-primary-color">
+        <span className="highlightable">Primary color</span>
+      </Title>
+      <Text>
+        The main accent color used by the chatbot (buttons, highlights, focus
+        states). You can also pick from custom colors you add below.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-primary-shade-light">
+        <span className="highlightable">Primary shade (light)</span>
+      </Title>
+      <Text>
+        The shade index (0–9) used for the primary color in light mode. Lower
+        numbers are lighter; higher numbers are darker.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-primary-shade-dark">
+        <span className="highlightable">Primary shade (dark)</span>
+      </Title>
+      <Text>
+        The shade index (0–9) used for the primary color in dark mode.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-inner-css">
+        <span className="highlightable">Inline CSS</span>
+      </Title>
+      <Text>
+        Optional CSS rules injected inside the chatbot root container. Use this
+        to tweak borders, spacing, or fonts when theme options are not enough.
+        Override the exposed design tokens or target elements inside the widget,
+        for example{" "}
+        <Code>
+          {":host, #ai-kit-inline-root { --ai-kit-chat-border-radius: 16px; }"}
+        </Code>{" "}
+        to round the chat window.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-custom-colors">
+        <span className="highlightable">Custom colors</span>
+      </Title>
+      <Text>
+        Define named hex colors (for example <Code>brand</Code> →
+        <Code>#228be6</Code>) that you can later select as the primary color.
+        Use this to match the chatbot to your brand palette.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-openbutton-position">
+        <span className="highlightable">Open button position</span>
+      </Title>
+      <Text>
+        Where the floating chatbot open button appears on the page (for example
+        bottom-right). Choose a corner that doesn’t conflict with other floating
+        UI elements.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-openbutton-label">
+        <span className="highlightable">Open button label</span>
+      </Title>
+      <Text>
+        The text shown on the open button (for example “Ask me”). If empty, the
+        default localized label is used.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-openbutton-icon-layout">
+        <span className="highlightable">Open button icon layout</span>
+      </Title>
+      <Text>
+        Controls where the icon sits relative to the label
+        (top/bottom/left/right).
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-openbutton-icon">
+        <span className="highlightable">Open button icon (base64)</span>
+      </Title>
+      <Text>
+        A Data URL for the icon (for example
+        <Code>data:image/svg+xml;base64,...</Code>). Leave empty to use the
+        default icon. For best results, use a simple, single-color SVG.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-openbutton-show-title">
+        <span className="highlightable">Show open button title</span>
+      </Title>
+      <Text>Toggles whether the label text is visible on the open button.</Text>
+
+      <Title order={3} mt="md" id="chatbot-openbutton-show-icon">
+        <span className="highlightable">Show open button icon</span>
+      </Title>
+      <Text>Toggles whether the icon is visible on the open button.</Text>
+
+      <Title order={3} mt="md" id="chatbot-label-overrides">
+        <span className="highlightable">Label overrides</span>
+      </Title>
+      <Text>
+        Override any built-in UI label (buttons, status texts, etc.). Only the
+        labels you change are stored; removing an override restores the default
+        translation for the selected language.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-max-images">
+        <span className="highlightable">Max images</span>
+      </Title>
+      <Text>
+        Limits how many images a user can attach in a single message. Set to 0
+        to effectively disable image uploads.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-max-image-bytes">
+        <span className="highlightable">Max image bytes</span>
+      </Title>
+      <Text>
+        Maximum allowed image size in bytes. This helps avoid large uploads and
+        keeps requests within backend limits.
+      </Text>
+    </>
+  ),
 };
 
 interface DocSidebarProps {

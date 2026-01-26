@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       AI-Kit – On-Device AI Tools
+ * Plugin Name:       WPSuite AI-Kit – On-Device AI Tools
  * Plugin URI:        https://wpsuite.io/ai-kit/
  * Description:       Bring on-device, zero-cost AI directly into WordPress. Create, rewrite, translate, proofread, summarize, and SEO-optimize content using Chrome's built-in AI — no API keys, no cloud, no tokens, no data leaving the browser.
  * Requires at least: 6.2
@@ -11,9 +11,9 @@
  * Author URI:        https://smart-cloud-solutions.com
  * License:           MIT
  * License URI:       https://mit-license.org/
- * Text Domain:       ai-kit
+ * Text Domain:       wpsuite-ai-kit
  *
- * @package           ai-kit
+ * @package           wpsuite-ai-kit
  */
 
 namespace SmartCloud\WPSuite\AiKit;
@@ -27,8 +27,8 @@ if (!defined('ABSPATH')) {
 if (version_compare(PHP_VERSION, '8.1', '<')) {
     deactivate_plugins(plugin_basename(__FILE__));
     wp_die(
-        esc_html__('AI-Kit requires PHP 8.1 or higher.', 'ai-kit'),
-        esc_html__('Plugin dependency check', 'ai-kit'),
+        esc_html__('AI-Kit requires PHP 8.1 or higher.', 'wpsuite-ai-kit'),
+        esc_html__('Plugin dependency check', 'wpsuite-ai-kit'),
         array('back_link' => true)
     );
 }
@@ -103,7 +103,7 @@ final class AiKit
     {
         add_meta_box(
             'ai_kit_generate_metadata',
-            __('Generate SEO metadata', 'ai-kit'),
+            __('Generate SEO metadata', 'wpsuite-ai-kit'),
             function ($post) {
                 if (!($post instanceof \WP_Post) || $post->post_type !== 'attachment') {
                     return;
@@ -118,7 +118,7 @@ final class AiKit
 
     public function registerMediaBulkActions($actions)
     {
-        $actions['ai_kit_preview_ai_metadata'] = __('Preview SEO metadata', 'ai-kit');
+        $actions['ai_kit_preview_ai_metadata'] = __('Preview SEO metadata', 'wpsuite-ai-kit');
         return $actions;
     }
 
@@ -181,7 +181,7 @@ final class AiKit
     {
         $categories[] = array(
             'slug' => 'wpsuite-ai-kit',
-            'title' => __('WPSuite-AI Kit', 'ai-kit'),
+            'title' => __('WPSuite-AI Kit', 'wpsuite-ai-kit'),
             'icon' => null,
         );
         return $categories;
@@ -342,7 +342,7 @@ __aikitGlobal.WpSuite.constants.aiKit = {
             'colors' => null,
             'uid' => strtolower(\function_exists('wp_generate_password') ? \wp_generate_password(8, false, false) : substr(md5(uniqid('', true)), 0, 8)),
             'customCSS' => null,
-            'styleText' => null,
+            'innerCSS' => null,
         );
 
         $provided_atts = array_change_key_case((array) $atts, CASE_LOWER);
@@ -481,7 +481,7 @@ __aikitGlobal.WpSuite.constants.aiKit = {
     private function defineConstants(): void
     {
         define('AI_KIT_VERSION', VERSION);
-        define('AI_KIT_SLUG', 'ai-kit');
+        define('AI_KIT_SLUG', 'wpsuite-ai-kit');
 
         define('AI_KIT_PATH', plugin_dir_path(__FILE__));
         define('AI_KIT_URL', plugin_dir_url(__FILE__));
@@ -581,5 +581,5 @@ function aikit()
  */
 function loader()
 {
-    return \SmartCloud\WPSuite\Hub\AiKitHubLoader::instance('ai-kit/ai-kit.php', 'ai-kit');
+    return \SmartCloud\WPSuite\Hub\AiKitHubLoader::instance('wpsuite-ai-kit/wpsuite-ai-kit.php', 'wpsuite-ai-kit');
 }

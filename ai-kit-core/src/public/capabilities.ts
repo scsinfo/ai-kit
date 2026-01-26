@@ -2,6 +2,7 @@
 import {
   AiModePreference,
   AnyCreateCoreOptions,
+  BackendTransport,
   BuiltInAiFeature,
   CapabilityDecision,
 } from "../types";
@@ -24,3 +25,13 @@ export const decideCapability = async (
     backendAvailable: false,
     reason: "not-implemented",
   });
+
+export async function resolveBackend(): Promise<{
+  available: boolean;
+  transport?: BackendTransport;
+  apiName?: string;
+  baseUrl?: string;
+  reason?: string;
+}> {
+  return { available: false, reason: "not-implemented" };
+}

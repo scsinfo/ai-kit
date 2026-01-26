@@ -1,5 +1,6 @@
 import {
   Alert,
+  Anchor,
   Button,
   Collapse,
   Divider,
@@ -78,6 +79,8 @@ type GeneratedPostMetadata = {
   title?: string;
   excerpt?: string;
 };
+
+const aiKit = getAiKitPlugin();
 
 const postResponseConstraint = {
   type: "object",
@@ -652,10 +655,13 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
               {
                 role: "system" as const,
                 content:
-                  "You generate SEO metadata for a WordPress post. " +
-                  "Return a minified JSON object with keys: title, excerpt. " +
-                  "Constraints: title <= 60 chars, excerpt <= 155 chars. " +
-                  "Do not add extra keys." +
+                  `You generate SEO metadata for a WordPress post.
+Return ONLY a minified JSON object with keys: title, excerpt.
+Constraints: title <= 60 chars, excerpt <= 155 chars.
+Be accurate: do not invent facts; if unsure, use neutral wording.
+Do not add extra keys, no markdown, no explanations.
+Follow the response constraint strictly.
+` +
                   (instructions
                     ? `
 Follow these additional instructions: ${instructions}`
@@ -663,7 +669,7 @@ Follow these additional instructions: ${instructions}`
               },
               {
                 role: "user" as const,
-                content: `Post content:\n${text!.trim()}\n\nGenerate JSON now.`,
+                content: `Post content:\n${text!.trim()}`,
               },
             ];
             const res = (await ai.run(async ({ signal, onStatus }) => {
@@ -711,15 +717,30 @@ Follow these additional instructions: ${instructions}`
                 {
                   role: "system",
                   content:
-                    "You are an assistant that writes WordPress media metadata for accessibility and SEO. " +
-                    "Return a minified JSON object with keys: alt, title, caption, description. " +
-                    "Do not include any extra keys. Keep it concise and non-promotional." +
+                    `You write WordPress media metadata for accessibility and SEO.
+Return ONLY a minified JSON object with keys: alt, title, caption, description.
+No extra keys. No markdown. No explanations.
+Follow the response constraint strictly.
+
+Guidelines:
+- Accurate, concise, non-promotional. No keyword stuffing.
+- Prefer plain language; avoid clichés.
+- Do not invent facts (names, locations, brands, numbers). If unsure, stay generic.
+- alt: describe what’s essential for understanding the image in context; avoid starting with "Image of" / "Photo of".
+- title: short, descriptive label.
+- caption: optional context users might see below the image; keep short.
+- description: 1–2 short sentences; can include context/usage if known.
+` +
                     (instructions
                       ? `
 Follow these additional instructions: ${instructions}`
                       : ""),
                 },
-                { role: "user", content: "Generate the JSON now." },
+                {
+                  role: "user",
+                  content:
+                    "What can you see on this image according to the optional knowledge base and shared context?",
+                },
               ].filter(Boolean) as Array<{
                 role: "system" | "user" | "assistant";
                 content: string;
@@ -1261,8 +1282,7 @@ Follow these additional instructions: ${instructions}`
                                 ]}
                                 value={
                                   outputLanguage ||
-                                  getAiKitPlugin().settings
-                                    .defaultOutputLanguage ||
+                                  aiKit.settings.defaultOutputLanguage ||
                                   (mode === "rewrite" ? "auto" : "")
                                 }
                                 onChange={(value) =>
@@ -1772,6 +1792,36 @@ Follow these additional instructions: ${instructions}`
                     {I18n.get("Close")}
                   </Button>
                 </Group>
+                <div
+                  style={{
+                    display: aiKit.settings?.enablePoweredBy ? "flex" : "none",
+                    justifyContent: aiKit.settings?.enablePoweredBy
+                      ? "flex-end"
+                      : undefined,
+                    padding: 0,
+                    marginRight: "var(--ai-kit-spacing-sm)",
+                    marginBottom:
+                      variation === "default"
+                        ? "var(--ai-kit-spacing-sm)"
+                        : undefined,
+                  }}
+                  className={
+                    aiKit.settings?.enablePoweredBy ? undefined : "sr-only"
+                  }
+                >
+                  <Text c="p" ta="right" fs="italic" fz="xs">
+                    Powered by{" "}
+                    <Anchor
+                      href="https://wpsuite.io/ai-kit/"
+                      target="_blank"
+                      td="none"
+                      fz="xs"
+                      fw={400}
+                    >
+                      WPSuite AI-Kit
+                    </Anchor>
+                  </Text>
+                </div>
               </AiFeatureBorder>
             </BodyComponent>
           </ContentComponent>

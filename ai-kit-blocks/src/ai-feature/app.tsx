@@ -125,7 +125,7 @@ export const App: FunctionComponent<
     default: defaults,
     allowOverride,
     className,
-    styleText,
+    innerCSS,
   } = props;
   const {
     text,
@@ -201,14 +201,14 @@ export const App: FunctionComponent<
           primaryColor,
           primaryShade,
           colors,
-          context: "frontend",
+          context: isPreview ? "admin" : "frontend",
           mode: mode!,
           variation: variation,
           colorMode: colorMode,
           language,
           direction,
           className,
-          styleText,
+          innerCSS,
           onClose,
           ...(outputSelector && {
             onAccept: (result) => {
@@ -272,7 +272,7 @@ export const App: FunctionComponent<
     showRegenerateOnBackendButton,
     autoRun,
     editable,
-    styleText,
+    innerCSS,
   ]);
 
   return (

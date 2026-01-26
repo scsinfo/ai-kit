@@ -55,8 +55,8 @@ final class AiKitHubLoader
         }
         $icon_url = $this->admin->getIconUrl();
         add_menu_page(
-            __('WPSuite.io', 'ai-kit'),
-            __('WPSuite.io', 'ai-kit'),
+            __('WPSuite.io', 'wpsuite-ai-kit'),
+            __('WPSuite.io', 'wpsuite-ai-kit'),
             'manage_options',
             WPSUITE_SLUG,
             null,
@@ -66,8 +66,8 @@ final class AiKitHubLoader
 
         $connect_suffix = add_submenu_page(
             WPSUITE_SLUG,
-            __('Connect your Site', 'ai-kit'),
-            __('Connect your Site', 'ai-kit'),
+            __('Connect your Site', 'wpsuite-ai-kit'),
+            __('Connect your Site', 'wpsuite-ai-kit'),
             'manage_options',
             WPSUITE_SLUG,
             array($this->admin, 'renderAdminPage'),
@@ -76,8 +76,8 @@ final class AiKitHubLoader
         /*
         $diagnostics_suffix = add_submenu_page(
             WPSUITE_SLUG,
-            __('Diagnostics', 'ai-kit'),
-            __('Diagnostics', 'ai-kit'),
+            __('Diagnostics', 'wpsuite-ai-kit'),
+            __('Diagnostics', 'wpsuite-ai-kit'),
             'manage_options',
             WPSUITE_SLUG . '-diagnostics',
             array($this->admin, 'renderAdminPage'),

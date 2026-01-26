@@ -1,12 +1,17 @@
 import {
+  AiChatbotProps,
   AiFeatureArgs,
+  AiKitConfig,
   AiWorkerHandle,
+  AiWorkerProps,
   AnyCreateCoreOptions,
   BuiltInAiFeature,
   decideCapability,
   getPromptOptions,
   getProofreadOptions,
   getRewriteOptions,
+  getStore,
+  getStoreSelect,
   getSummarizeOptions,
   getTranslateOptions,
   getWriteOptions,
@@ -18,7 +23,8 @@ import {
   WriteArgs,
   type AiFeatureProps,
 } from "@smart-cloud/ai-kit-core";
-import { StrictMode } from "react";
+import { useSelect } from "@wordpress/data";
+import React, { StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 
@@ -137,9 +143,78 @@ async function renderFeature(args: AiFeatureArgs): Promise<AiWorkerHandle> {
   return handle;
 }
 
+const ChatbotComponent = (
+  props: AiChatbotProps & { Component: React.ComponentType<AiChatbotProps> },
+): JSX.Element => {
+  const { Component, store } = props;
+
+  const config: AiKitConfig | null = useSelect(() =>
+    getStoreSelect(store).getConfig(),
+  );
+
+  const showChatbotPreview: boolean = useSelect(() =>
+    getStoreSelect(store).isShowChatbotPreview(),
+  );
+
+  if (!config?.enableChatbot || showChatbotPreview) {
+    return <></>;
+  }
+
+  return <Component {...props} {...config?.chatbot} />;
+};
+
+async function renderChatbot(args: AiWorkerProps): Promise<AiWorkerHandle> {
+  const AiChatbot = (
+    await import(/* webpackChunkName: "ai-kit-ui" */ "@smart-cloud/ai-kit-ui")
+  ).AiChatbot;
+
+  const { onClose, ...aiChatbotProps } = args;
+
+  const host = document.body;
+
+  const container = document.createElement("div");
+  container.setAttribute("data-wpsuite-ai-chatbot", "1");
+  container.style.zIndex = "2147483647"; // max z-index
+  host.appendChild(container);
+
+  const root: Root | null = createRoot(container);
+
+  const handleClose = () => {
+    // first call user's onClose (so they can react), then cleanup
+    try {
+      onClose?.();
+    } catch {
+      // ignore
+    }
+  };
+
+  // allow programmatic close from returned handle
+  const handle: AiWorkerHandle = {
+    container,
+    close: handleClose,
+    unmount: () => void 0,
+  };
+
+  root.render(
+    <StrictMode>
+      <ChatbotComponent
+        Component={AiChatbot}
+        {...aiChatbotProps}
+        onClose={handleClose}
+        previewMode={false}
+      />
+    </StrictMode>,
+  );
+
+  return handle;
+}
+
 onDomReady(async () => {
   const aiKit = initializeAiKit(renderFeature);
   observe();
+  getStore().then((store) => {
+    renderChatbot({ store, onClose: () => void 0 });
+  });
 
   if (
     aiKit.settings?.reCaptchaSiteKey &&
@@ -148,17 +223,29 @@ onDomReady(async () => {
     )
   ) {
     const el = document.createElement("div");
+    el.id = "ai-kit-recaptcha-provider";
     el.setAttribute(
       "wpsuite-recaptcha-provider",
       aiKit.settings.reCaptchaSiteKey,
     );
     document.body.appendChild(el);
+    const observer = new MutationObserver(() => {
+      const badge = document.querySelector(".grecaptcha-badge");
+      if (badge) {
+        (badge as HTMLElement).style.visibility = "hidden";
+        (badge as HTMLElement).style.display = "none";
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
     createRoot(el).render(
       <StrictMode>
         <GoogleReCaptchaProvider
           reCaptchaKey={aiKit.settings.reCaptchaSiteKey}
           useEnterprise={aiKit.settings.useRecaptchaEnterprise}
           useRecaptchaNet={aiKit.settings.useRecaptchaNet}
+          scriptProps={{ async: true, defer: true }}
         >
           <></>
         </GoogleReCaptchaProvider>

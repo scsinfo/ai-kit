@@ -1,7 +1,4 @@
-import {
-  attachDefaultPluginRuntime,
-  TEXT_DOMAIN,
-} from "@smart-cloud/wpsuite-core";
+import { attachDefaultPluginRuntime } from "@smart-cloud/wpsuite-core";
 import { __ } from "@wordpress/i18n";
 import {
   getAiKitPlugin,
@@ -20,6 +17,7 @@ import {
   type Capabilities,
   type Features,
 } from "./types";
+import { TEXT_DOMAIN } from "./constants";
 
 export {
   getAiKitPlugin,
@@ -42,8 +40,8 @@ export {
   type Store,
 } from "./store";
 
-export * from "./types";
 export * from "./icons";
+export * from "./types";
 
 export const LANGUAGE_OPTIONS: { label: string; value: AiKitLanguageCode }[] = [
   { label: __("Arabic", TEXT_DOMAIN), value: "ar" },
@@ -170,6 +168,20 @@ export const prompt = async (...args: Parameters<Features["prompt"]>) => {
   return module.prompt(...args);
 };
 
+export const sendChatMessage = async (
+  ...args: Parameters<Features["sendChatMessage"]>
+) => {
+  const module = await features;
+  return module.sendChatMessage(...args);
+};
+
+export const sendFeedbackMessage = async (
+  ...args: Parameters<Features["sendFeedbackMessage"]>
+) => {
+  const module = await features;
+  return module.sendFeedbackMessage(...args);
+};
+
 export const initializeAiKit = (
   renderFeature: (args: AiFeatureArgs) => Promise<AiWorkerHandle>,
 ): AiKitPlugin => {
@@ -228,6 +240,18 @@ export const initializeAiKit = (
       const options = args[1] || {};
       args[1] = { context: "frontend", ...options };
       return module.prompt(...args);
+    },
+    sendChatMessage: async (
+      ...args: Parameters<Features["sendChatMessage"]>
+    ) => {
+      const module = await features;
+      return module.sendChatMessage(...args);
+    },
+    sendFeedbackMessage: async (
+      ...args: Parameters<Features["sendFeedbackMessage"]>
+    ) => {
+      const module = await features;
+      return module.sendFeedbackMessage(...args);
     },
   };
 

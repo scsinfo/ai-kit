@@ -1,7 +1,7 @@
 import * as _smart_cloud_ai_kit_core from '@smart-cloud/ai-kit-core';
-import { ContextKind, AiModePreference, AiKitLanguageCode, AiKitStatusEvent, AiWorkerProps } from '@smart-cloud/ai-kit-core';
-import * as react from 'react';
-import { FC, ComponentType } from 'react';
+import { ContextKind, AiModePreference, AiKitLanguageCode, HistoryStorageMode, AiChatbotLabels, AiKitStatusEvent, AiWorkerProps } from '@smart-cloud/ai-kit-core';
+import * as React from 'react';
+import React__default, { FC, ComponentType } from 'react';
 
 declare const AiFeature: FC<_smart_cloud_ai_kit_core.AiWorkerProps & {
     mode: _smart_cloud_ai_kit_core.AiFeatureMode;
@@ -37,6 +37,18 @@ declare const AiFeature: FC<_smart_cloud_ai_kit_core.AiWorkerProps & {
 } & Partial<_smart_cloud_ai_kit_core.AiWorkerProps>>;
 
 declare const markdownToHtml: (markdown: string) => Promise<string>;
+
+declare const DEFAULT_CHATBOT_LABELS: Required<AiChatbotLabels>;
+declare const AiChatbot: React__default.FC<_smart_cloud_ai_kit_core.AiWorkerProps & {
+    placeholder?: string;
+    maxImages?: number;
+    maxImageBytes?: number;
+    previewMode?: boolean;
+    historyStorage?: HistoryStorageMode;
+    labels?: AiChatbotLabels;
+    openButtonIconLayout?: _smart_cloud_ai_kit_core.OpenButtonIconLayout;
+    openButtonPosition?: _smart_cloud_ai_kit_core.OpenButtonPosition;
+} & Partial<_smart_cloud_ai_kit_core.AiWorkerProps>>;
 
 type AiRunState<T> = {
     busy: boolean;
@@ -80,8 +92,8 @@ type AiKitShellInjectedProps = {
     language?: string;
     rootElement: HTMLElement;
 };
-declare function withAiKitShell<P extends object>(RootComponent: ComponentType<P & AiKitShellInjectedProps>, propOverrides?: Partial<AiWorkerProps>): react.FC<P & Partial<AiWorkerProps>>;
+declare function withAiKitShell<P extends object>(RootComponent: ComponentType<P & AiKitShellInjectedProps>, propOverrides?: Partial<AiWorkerProps>): React.FC<P & Partial<AiWorkerProps>>;
 
 declare const translations: Record<string, Record<string, string>>;
 
-export { AiFeature, type AiFeatureFunction, type AiRunState, type UseAiRunResult, isBackendConfigured, markdownToHtml, readDefaultOutputLanguage, stripCodeFence, translations, useAiRun, withAiKitShell };
+export { AiChatbot, AiFeature, type AiFeatureFunction, type AiRunState, DEFAULT_CHATBOT_LABELS, type UseAiRunResult, isBackendConfigured, markdownToHtml, readDefaultOutputLanguage, stripCodeFence, translations, useAiRun, withAiKitShell };

@@ -45,8 +45,8 @@ class Admin
     {
         $settings_page = add_submenu_page(
             WPSUITE_SLUG,
-            __('AI-Kit Settings', 'ai-kit'),
-            __('AI-Kit Settings', 'ai-kit'),
+            __('AI-Kit Settings', 'wpsuite-ai-kit'),
+            __('AI-Kit Settings', 'wpsuite-ai-kit'),
             'manage_options',
             AI_KIT_SLUG,
             array($this, 'renderAiKitSettingsPage'),
@@ -54,8 +54,8 @@ class Admin
 
         $diagnostics_page = add_submenu_page(
             WPSUITE_SLUG,
-            __('AI-Kit Diagnostics', 'ai-kit'),
-            __('AI-Kit Diagnostics', 'ai-kit'),
+            __('AI-Kit Diagnostics', 'wpsuite-ai-kit'),
+            __('AI-Kit Diagnostics', 'wpsuite-ai-kit'),
             'manage_options',
             AI_KIT_SLUG . '-diagnostics',
             array($this, 'renderAiKitSettingsPage'),
@@ -74,7 +74,7 @@ class Admin
             $res = wp_enqueue_script('ai-kit-admin-script', AI_KIT_URL . 'ai-kit-admin/dist/index.js', $script_asset['dependencies'], AI_KIT_VERSION, true);
             // Make the blocks translatable.
             if (function_exists('wp_set_script_translations')) {
-                wp_set_script_translations('ai-kit-admin-script', 'ai-kit', AI_KIT_PATH . 'languages');
+                wp_set_script_translations('ai-kit-admin-script', 'wpsuite-ai-kit', AI_KIT_PATH . 'languages');
             }
 
             if ($hook === $settings_page) {
@@ -96,7 +96,7 @@ class Admin
 
     public function highlightMenu($parent_file)
     {
-        if (get_query_var('post_type') == 'wp_block' && get_query_var('s') == 'ai-kit') {
+        if (get_query_var('post_type') == 'wp_block' && get_query_var('s') == 'wpsuite-ai-kit') {
             return WPSUITE_SLUG;
         }
         return $parent_file;
@@ -117,7 +117,7 @@ class Admin
                 'callback' => array($this, 'updateSettings'),
                 'permission_callback' => function () {
                     if (!current_user_can('manage_options')) {
-                        return new WP_Error('rest_forbidden', esc_html__('Forbidden', 'ai-kit'), array('status' => 403));
+                        return new WP_Error('rest_forbidden', esc_html__('Forbidden', 'wpsuite-ai-kit'), array('status' => 403));
                     }
                     return true;
                 },
@@ -155,7 +155,7 @@ class Admin
 
         // Frissített beállítások mentése
         update_option(AI_KIT_SLUG, $this->settings);
-        return new WP_REST_Response(array('success' => true, 'message' => __('Settings updated successfully.', 'ai-kit')), 200);
+        return new WP_REST_Response(array('success' => true, 'message' => __('Settings updated successfully.', 'wpsuite-ai-kit')), 200);
     }
 
     private function registerRestRoutes()

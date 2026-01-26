@@ -5,19 +5,6 @@ if (!defined('ABSPATH')) {
 $ai_kit_feature_hash = substr(md5(serialize($attributes)), 0, 6) . '_' . wp_rand();
 $ai_kit_feature_bid = 'ai_kit_feature_' . $ai_kit_feature_hash;
 $ai_kit_feature_uid = isset($attributes['uid']) ? sanitize_key($attributes['uid']) : '';
-if (!array_key_exists("configB64", $attributes)) {
-	$ai_kit_feature_raw = isset($attributes['customCSS']) ? $attributes['customCSS'] : '';
-	if (!current_user_can('unfiltered_html')) {
-		$ai_kit_feature_raw = wp_kses($ai_kit_feature_raw, []);
-	}
-	if ($ai_kit_feature_uid) {
-		$ai_kit_feature_scope = ".wp-block-css-box-$ai_kit_feature_uid";
-		$ai_kit_feature_css = str_replace('selector', $ai_kit_feature_scope, $ai_kit_feature_raw);
-		echo "<style id='css-box-" . esc_attr($ai_kit_feature_uid) . "'>" . wp_kses($ai_kit_feature_css, []) . "</style>";
-	}
-}
-?>
-<?php
 // Define the attributes and their default values if any
 $ai_kit_attribute_map = [
 	'mode' => null,
@@ -43,7 +30,7 @@ $ai_kit_attribute_map = [
 	'primaryShade' => null,
 	'colors' => null,
 	'uid' => null,
-	'styleText' => null,
+	'innerCSS' => null,
 	'configB64' => null,
 	'configFormat' => null,
 ];
@@ -59,7 +46,7 @@ $ai_kit_div_attrs[] = 'data-is-preview="ai-kit-is-preview"';
 foreach ($ai_kit_attribute_map as $ai_kit_key => $ai_kit_default) {
 	if (array_key_exists($ai_kit_key, $attributes) || $ai_kit_default !== null) {
 		$ai_kit_value = array_key_exists($ai_kit_key, $attributes) ? $attributes[$ai_kit_key] : $ai_kit_default;
-		if ($ai_kit_key === 'styleText' && is_string($ai_kit_value)) {
+		if ($ai_kit_key === 'innerCSS' && is_string($ai_kit_value)) {
 			$ai_kit_value = str_replace(["\r\n", "\r", "\n"], ' ', $ai_kit_value);
 		}
 		if (is_bool($ai_kit_value)) {
@@ -82,3 +69,16 @@ $ai_kit_div_attrs[] = get_block_wrapper_attributes();
 		<?php echo esc_html($content); ?>
 	</div>
 </div>
+<?php
+if (!array_key_exists("configB64", $attributes)) {
+	$ai_kit_feature_raw = isset($attributes['customCSS']) ? $attributes['customCSS'] : '';
+	if (!current_user_can('unfiltered_html')) {
+		$ai_kit_feature_raw = wp_kses($ai_kit_feature_raw, []);
+	}
+	if ($ai_kit_feature_uid) {
+		$ai_kit_feature_scope = ".wp-block-css-box-$ai_kit_feature_uid";
+		$ai_kit_feature_css = str_replace('selector', $ai_kit_feature_scope, $ai_kit_feature_raw);
+		echo "<style id='css-box-" . esc_attr($ai_kit_feature_uid) . "'>" . wp_kses($ai_kit_feature_css, []) . "</style>";
+	}
+}
+?>

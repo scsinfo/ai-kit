@@ -100,7 +100,7 @@ export interface EditorBlockProps {
   colors?: AiFeatureArgs["colors"];
   uid?: string;
   customCSS?: string;
-  styleText?: string;
+  innerCSS?: string;
 }
 
 const useScopedCssCompat = (id: string, css: string) => {
@@ -161,7 +161,7 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
     primaryShade,
     optionsDisplay,
     customCSS,
-    styleText,
+    innerCSS,
     uid,
   } = attributes;
 
@@ -1069,6 +1069,7 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
             />
             <Divider />
             <TextareaControl
+              label={__("Custom CSS", TEXT_DOMAIN)}
               __nextHasNoMarginBottom
               value={customCSS || ""}
               onChange={(v) => setAttributes({ customCSS: v })}
@@ -1078,9 +1079,10 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
               )}
             />
             <TextareaControl
+              label={__("Inner CSS", TEXT_DOMAIN)}
               __nextHasNoMarginBottom
-              value={styleText || ""}
-              onChange={(v) => setAttributes({ styleText: v })}
+              value={innerCSS || ""}
+              onChange={(v) => setAttributes({ innerCSS: v })}
               help={__(
                 "Add raw CSS styles injected into the AI-Kit Feature block’s shadow DOM.",
                 TEXT_DOMAIN,
@@ -1115,7 +1117,7 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
             primaryShade={primaryShade}
             colors={colors}
             allowOverride={allowOverride}
-            styleText={styleText}
+            innerCSS={innerCSS}
           />
         ) : (
           <>

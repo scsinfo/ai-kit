@@ -41,6 +41,8 @@ export interface AiKitFeatures {
   readonly translate: Features["translate"];
   readonly detectLanguage: Features["detectLanguage"];
   readonly prompt: Features["prompt"];
+  readonly sendChatMessage: Features["sendChatMessage"];
+  readonly sendFeedbackMessage: Features["sendFeedbackMessage"];
   readonly renderFeature: (args: AiFeatureArgs) => Promise<AiWorkerHandle>;
 }
 
@@ -227,9 +229,96 @@ export type AiWorkerProps = {
     dark?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   };
   className?: string;
-  styleText?: string;
+  innerCSS?: string;
   title?: string;
   onClose: () => void;
+};
+
+export type HistoryStorageMode =
+  | "localstorage"
+  | "sessionstorage"
+  | "nostorage";
+export type OpenButtonIconLayout = "top" | "bottom" | "left" | "right";
+
+export type OpenButtonPosition =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
+
+export type AiChatbotLabels = Partial<{
+  modalTitle: string;
+
+  userLabel: string;
+  assistantLabel: string;
+
+  askMeLabel: string; // fallback for open button (if openButtonTitle not provided)
+
+  sendLabel: string;
+  cancelLabel: string;
+
+  resetLabel: string;
+  confirmLabel: string;
+  clickAgainToConfirmLabel: string;
+
+  notSentLabel: string;
+  editLabel: string;
+
+  readyLabel: string;
+  readyEmptyLabel: string;
+
+  addLabel: string;
+  addImageLabel: string;
+  removeImageLabel: string;
+
+  closeChatLabel: string;
+  maximizeLabel: string;
+  restoreSizeLabel: string;
+
+  referencesLabel: string;
+  referenceLabel: string;
+
+  acceptResponseLabel: string;
+  rejectResponseLabel: string;
+
+  placeholder: string;
+
+  emptyResponseLabel: string;
+  unexpectedErrorLabel: string;
+}>;
+
+export type AiChatbotProps = AiWorkerProps & {
+  placeholder?: string;
+  maxImages?: number;
+  maxImageBytes?: number;
+
+  previewMode?: boolean;
+
+  /**
+   * Chat history persistence:
+   * - "localstorage" (default)
+   * - "sessionstorage"
+   * - "nostorage"
+   */
+  historyStorage?: HistoryStorageMode;
+
+  /**
+   * UI labels override (admin UI will populate later)
+   */
+  labels?: AiChatbotLabels;
+
+  /**
+   * Open button icon layout relative to text.
+   * Default: "top"
+   */
+  openButtonIconLayout?: OpenButtonIconLayout;
+
+  /**
+   * Open button position in the viewport.
+   * Default: "bottom-right"
+   * Options: "bottom-right" | "bottom-left" | "top-right" | "top-left"
+   */
+  openButtonPosition?: OpenButtonPosition; // default: "bottom-right"
 };
 
 export type AiFeatureProps = AiWorkerProps & {
@@ -354,9 +443,10 @@ export interface TranslateResult {
   result: string;
 }
 
-export type PromptMessages =
-  | string
-  | Array<{ role: "system" | "user" | "assistant"; content: string }>;
+export type PromptMessages = Array<{
+  role: "system" | "user" | "assistant";
+  content: string;
+}>;
 
 /**
  * Visual inputs supported by Chrome Prompt API multimodal prompting.
@@ -407,14 +497,28 @@ export interface PromptArgs {
 
 export interface PromptResult {
   result: string;
-
-  /** Optional language metadata (best-effort). */
-  language?: {
-    requestedOutputLanguage?: AiKitLanguageCode;
-    modelOutputLanguage?: AiKitLanguageCode;
-    translated?: boolean;
-    strategy?: OnDeviceUnsupportedLanguageStrategy;
+  sessionId?: string;
+  metadata?: {
+    messageId: string;
   };
+}
+
+export interface ChatMessageArgs {
+  sessionId?: string;
+  message?: string;
+  sharedContext?: string;
+  images?: PromptImageInput[];
+  /**
+   * Optional on-device tuning:
+   */
+  topK?: number;
+  temperature?: number;
+}
+
+export interface FeedbackMessageArgs {
+  feedbackType: "accepted" | "rejected";
+  feedbackMessageId: string;
+  sessionId: string;
 }
 
 /* -----------------------------
@@ -443,6 +547,14 @@ export interface Capabilities {
     availabilityOptions?: AnyCreateCoreOptions,
     modeOverride?: AiModePreference,
   ) => Promise<CapabilityDecision>;
+
+  resolveBackend: () => Promise<{
+    available: boolean;
+    transport?: BackendTransport;
+    apiName?: string;
+    baseUrl?: string;
+    reason?: string;
+  }>;
 
   willUseOnDevice: (
     feature: BuiltInAiFeature,
@@ -515,4 +627,12 @@ export interface Features {
     args: Partial<PromptArgs>,
   ) => Promise<LanguageModelCreateCoreOptions>;
   prompt: (args: PromptArgs, options?: FeatureOptions) => Promise<PromptResult>;
+  sendChatMessage: (
+    args: ChatMessageArgs,
+    options?: FeatureOptions,
+  ) => Promise<PromptResult>;
+  sendFeedbackMessage: (
+    args: FeedbackMessageArgs,
+    options?: FeatureOptions,
+  ) => Promise<PromptResult>;
 }

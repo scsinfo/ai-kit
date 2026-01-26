@@ -309,9 +309,9 @@ try {
         ) ??
         undefined;
 
-      const yamlStyleText = fromYaml<string>(yamlConfig, "styleText");
-      const styleText =
-        yamlStyleText ?? el.getAttribute("data-style-text") ?? undefined;
+      const yamlInnerCSS = fromYaml<string>(yamlConfig, "innerCSS");
+      const innerCSS =
+        yamlInnerCSS ?? el.getAttribute("data-inner-css") ?? undefined;
 
       const yamlUid = fromYaml<string>(yamlConfig, "uid");
       const uid = yamlUid ?? el.getAttribute("data-uid") ?? undefined;
@@ -365,7 +365,7 @@ try {
             optionsDisplay={optionsDisplay}
             default={defaults}
             allowOverride={allowOverride}
-            styleText={styleText}
+            innerCSS={innerCSS}
           />
         </StrictMode>,
       );

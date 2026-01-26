@@ -1,5 +1,4 @@
 import { SubscriptionType, WpSuitePluginBase } from '@smart-cloud/wpsuite-core';
-export { TEXT_DOMAIN } from '@smart-cloud/wpsuite-core';
 import { StoreDescriptor } from '@wordpress/data';
 
 interface AiKitConfig {
@@ -8,6 +7,8 @@ interface AiKitConfig {
     backendApiName?: string;
     backendBaseUrl?: string;
     subscriptionType?: SubscriptionType;
+    enableChatbot?: boolean;
+    chatbot?: AiChatbotProps;
 }
 /**
  * Ensures we only keep runtime keys that are part of AiKitConfig.
@@ -17,6 +18,10 @@ interface AiKitConfig {
  */
 declare const sanitizeAiKitConfig: (input: unknown) => AiKitConfig;
 declare const actions: {
+    setShowChatbotPreview(showChatbotPreview: boolean): {
+        type: string;
+        showChatbotPreview: boolean;
+    };
     setLanguage(language: string | undefined | null): {
         type: string;
         language: string | null | undefined;
@@ -31,6 +36,7 @@ interface CustomTranslations {
 }
 interface State {
     config: AiKitConfig | null;
+    showChatbotPreview: boolean;
     language: string | undefined | null;
     direction: "ltr" | "rtl" | "auto" | undefined | null;
     customTranslations: CustomTranslations | null;
@@ -38,6 +44,7 @@ interface State {
 type Store = StoreDescriptor;
 type StoreSelectors = {
     getConfig(): AiKitConfig | null;
+    isShowChatbotPreview(): boolean;
     getCustomTranslations(): CustomTranslations | null;
     getLanguage(): string | undefined | null;
     getDirection(): "ltr" | "rtl" | "auto" | undefined | null;
@@ -69,6 +76,8 @@ interface AiKitFeatures {
     readonly translate: Features["translate"];
     readonly detectLanguage: Features["detectLanguage"];
     readonly prompt: Features["prompt"];
+    readonly sendChatMessage: Features["sendChatMessage"];
+    readonly sendFeedbackMessage: Features["sendFeedbackMessage"];
     readonly renderFeature: (args: AiFeatureArgs) => Promise<AiWorkerHandle>;
 }
 interface AiKitSettings {
@@ -171,9 +180,68 @@ type AiWorkerProps = {
         dark?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
     };
     className?: string;
-    styleText?: string;
+    innerCSS?: string;
     title?: string;
     onClose: () => void;
+};
+type HistoryStorageMode = "localstorage" | "sessionstorage" | "nostorage";
+type OpenButtonIconLayout = "top" | "bottom" | "left" | "right";
+type OpenButtonPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
+type AiChatbotLabels = Partial<{
+    modalTitle: string;
+    userLabel: string;
+    assistantLabel: string;
+    askMeLabel: string;
+    sendLabel: string;
+    cancelLabel: string;
+    resetLabel: string;
+    confirmLabel: string;
+    clickAgainToConfirmLabel: string;
+    notSentLabel: string;
+    editLabel: string;
+    readyLabel: string;
+    readyEmptyLabel: string;
+    addLabel: string;
+    addImageLabel: string;
+    removeImageLabel: string;
+    closeChatLabel: string;
+    maximizeLabel: string;
+    restoreSizeLabel: string;
+    referencesLabel: string;
+    referenceLabel: string;
+    acceptResponseLabel: string;
+    rejectResponseLabel: string;
+    placeholder: string;
+    emptyResponseLabel: string;
+    unexpectedErrorLabel: string;
+}>;
+type AiChatbotProps = AiWorkerProps & {
+    placeholder?: string;
+    maxImages?: number;
+    maxImageBytes?: number;
+    previewMode?: boolean;
+    /**
+     * Chat history persistence:
+     * - "localstorage" (default)
+     * - "sessionstorage"
+     * - "nostorage"
+     */
+    historyStorage?: HistoryStorageMode;
+    /**
+     * UI labels override (admin UI will populate later)
+     */
+    labels?: AiChatbotLabels;
+    /**
+     * Open button icon layout relative to text.
+     * Default: "top"
+     */
+    openButtonIconLayout?: OpenButtonIconLayout;
+    /**
+     * Open button position in the viewport.
+     * Default: "bottom-right"
+     * Options: "bottom-right" | "bottom-left" | "top-right" | "top-left"
+     */
+    openButtonPosition?: OpenButtonPosition;
 };
 type AiFeatureProps = AiWorkerProps & {
     mode: AiFeatureMode;
@@ -273,7 +341,7 @@ interface TranslateArgs {
 interface TranslateResult {
     result: string;
 }
-type PromptMessages = string | Array<{
+type PromptMessages = Array<{
     role: "system" | "user" | "assistant";
     content: string;
 }>;
@@ -309,19 +377,39 @@ interface PromptArgs {
 }
 interface PromptResult {
     result: string;
-    /** Optional language metadata (best-effort). */
-    language?: {
-        requestedOutputLanguage?: AiKitLanguageCode;
-        modelOutputLanguage?: AiKitLanguageCode;
-        translated?: boolean;
-        strategy?: OnDeviceUnsupportedLanguageStrategy;
+    sessionId?: string;
+    metadata?: {
+        messageId: string;
     };
+}
+interface ChatMessageArgs {
+    sessionId?: string;
+    message?: string;
+    sharedContext?: string;
+    images?: PromptImageInput[];
+    /**
+     * Optional on-device tuning:
+     */
+    topK?: number;
+    temperature?: number;
+}
+interface FeedbackMessageArgs {
+    feedbackType: "accepted" | "rejected";
+    feedbackMessageId: string;
+    sessionId: string;
 }
 type AnyCreateCoreOptions = LanguageModelCreateCoreOptions | SummarizerCreateCoreOptions | WriterCreateCoreOptions | RewriterCreateCoreOptions | ProofreaderCreateCoreOptions | LanguageDetectorCreateCoreOptions | TranslatorCreateCoreOptions;
 interface Capabilities {
     MIN_CHROME_VERSION?: Partial<Record<BuiltInAiFeature, number>>;
     checkOnDeviceAvailability: (feature: BuiltInAiFeature, availabilityOptions?: AnyCreateCoreOptions) => Promise<DeviceAvailability>;
     decideCapability: (feature: BuiltInAiFeature, availabilityOptions?: AnyCreateCoreOptions, modeOverride?: AiModePreference) => Promise<CapabilityDecision>;
+    resolveBackend: () => Promise<{
+        available: boolean;
+        transport?: BackendTransport;
+        apiName?: string;
+        baseUrl?: string;
+        reason?: string;
+    }>;
     willUseOnDevice: (feature: BuiltInAiFeature, availabilityOptions?: AnyCreateCoreOptions) => Promise<boolean>;
     willUseBackend: (feature: BuiltInAiFeature, availabilityOptions?: AnyCreateCoreOptions) => Promise<boolean>;
 }
@@ -346,6 +434,8 @@ interface Features {
     detectLanguage: (args: DetectLanguageArgs, options?: FeatureOptions) => Promise<DetectLanguageOutput>;
     getPromptOptions: (args: Partial<PromptArgs>) => Promise<LanguageModelCreateCoreOptions>;
     prompt: (args: PromptArgs, options?: FeatureOptions) => Promise<PromptResult>;
+    sendChatMessage: (args: ChatMessageArgs, options?: FeatureOptions) => Promise<PromptResult>;
+    sendFeedbackMessage: (args: FeedbackMessageArgs, options?: FeatureOptions) => Promise<PromptResult>;
 }
 
 type AiKitReadyEvent = "wpsuite:ai-kit:ready";
@@ -354,6 +444,8 @@ type AiKitPlugin = WpSuitePluginBase & AiKit;
 declare function getAiKitPlugin(): AiKitPlugin;
 declare function waitForAiKitReady(timeoutMs?: number): Promise<void>;
 declare function getStore(timeoutMs?: number): Promise<Store>;
+
+declare const TEXT_DOMAIN = "wpsuite-ai-kit";
 
 declare const AiKitFeatureIcon: React.FC<React.SVGProps<SVGSVGElement>>;
 declare const AiKitChatbotIcon: React.FC<React.SVGProps<SVGSVGElement>>;
@@ -379,6 +471,8 @@ declare const translate: (...args: Parameters<Features["translate"]>) => Promise
 declare const detectLanguage: (...args: Parameters<Features["detectLanguage"]>) => Promise<DetectLanguageOutput>;
 declare const getPromptOptions: (...args: Parameters<Features["getPromptOptions"]>) => Promise<LanguageModelCreateCoreOptions>;
 declare const prompt: (...args: Parameters<Features["prompt"]>) => Promise<PromptResult>;
+declare const sendChatMessage: (...args: Parameters<Features["sendChatMessage"]>) => Promise<PromptResult>;
+declare const sendFeedbackMessage: (...args: Parameters<Features["sendFeedbackMessage"]>) => Promise<PromptResult>;
 declare const initializeAiKit: (renderFeature: (args: AiFeatureArgs) => Promise<AiWorkerHandle>) => AiKitPlugin;
 
-export { type AiFeatureArgs, type AiFeatureMode, type AiFeatureProps, type AiKit, AiKitChatbotIcon, type AiKitConfig, type AiKitErrorEvent, AiKitFeatureIcon, type AiKitFeatures, type AiKitLanguageCode, type AiKitLanguageProfile, type AiKitLanguageRef, type AiKitPlugin, type AiKitReadyEvent, type AiKitSettings, type AiKitStatusEvent, type AiKitStatusStep, type AiModePreference, type AiWorkerHandle, type AiWorkerProps, type AnyCreateCoreOptions, type Backend, type BackendCallOptions, BackendError, type BackendTransport, type BuiltInAiFeature, type Capabilities, type CapabilityDecision, type CapabilitySource, type ContextKind, type CustomTranslations, type DetectLanguageArgs, type DetectLanguageOutput, type DeviceAvailability, type FeatureOptions, type Features, LANGUAGE_OPTIONS, type OnDeviceUnsupportedLanguageStrategy, type PromptArgs, type PromptImageInput, type PromptMessages, type PromptResult, type ProofreadArgs, type ProofreadOutput, type RewriteArgs, type RewriteResult, type State, type Store, type SummarizeArgs, type SummarizeResult, type TranslateArgs, type TranslateResult, type WriteArgs, type WriteResult, checkOnDeviceAvailability, decideCapability, detectLanguage, dispatchBackend, getAiKitPlugin, getMinChromeVersions, getPromptOptions, getProofreadOptions, getRewriteOptions, getStore, getStoreDispatch, getStoreSelect, getSummarizeOptions, getTranslateOptions, getWriteOptions, initializeAiKit, observeStore, prompt, proofread, rewrite, sanitizeAiKitConfig, summarize, translate, waitForAiKitReady, write };
+export { type AiChatbotLabels, type AiChatbotProps, type AiFeatureArgs, type AiFeatureMode, type AiFeatureProps, type AiKit, AiKitChatbotIcon, type AiKitConfig, type AiKitErrorEvent, AiKitFeatureIcon, type AiKitFeatures, type AiKitLanguageCode, type AiKitLanguageProfile, type AiKitLanguageRef, type AiKitPlugin, type AiKitReadyEvent, type AiKitSettings, type AiKitStatusEvent, type AiKitStatusStep, type AiModePreference, type AiWorkerHandle, type AiWorkerProps, type AnyCreateCoreOptions, type Backend, type BackendCallOptions, BackendError, type BackendTransport, type BuiltInAiFeature, type Capabilities, type CapabilityDecision, type CapabilitySource, type ChatMessageArgs, type ContextKind, type CustomTranslations, type DetectLanguageArgs, type DetectLanguageOutput, type DeviceAvailability, type FeatureOptions, type Features, type FeedbackMessageArgs, type HistoryStorageMode, LANGUAGE_OPTIONS, type OnDeviceUnsupportedLanguageStrategy, type OpenButtonIconLayout, type OpenButtonPosition, type PromptArgs, type PromptImageInput, type PromptMessages, type PromptResult, type ProofreadArgs, type ProofreadOutput, type RewriteArgs, type RewriteResult, type State, type Store, type SummarizeArgs, type SummarizeResult, TEXT_DOMAIN, type TranslateArgs, type TranslateResult, type WriteArgs, type WriteResult, checkOnDeviceAvailability, decideCapability, detectLanguage, dispatchBackend, getAiKitPlugin, getMinChromeVersions, getPromptOptions, getProofreadOptions, getRewriteOptions, getStore, getStoreDispatch, getStoreSelect, getSummarizeOptions, getTranslateOptions, getWriteOptions, initializeAiKit, observeStore, prompt, proofread, rewrite, sanitizeAiKitConfig, sendChatMessage, sendFeedbackMessage, summarize, translate, waitForAiKitReady, write };
