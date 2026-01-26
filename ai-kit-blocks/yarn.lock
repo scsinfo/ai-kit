@@ -2853,6 +2853,11 @@
   resolved "https://registry.npmjs.org/@leichtgewicht/ip-codec/-/ip-codec-2.0.5.tgz#4fc56c15c580b9adb7dc3c333a134e540b44bfb1"
   integrity sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==
 
+"@mantine/colors-generator@^8.3.13":
+  version "8.3.13"
+  resolved "https://registry.npmjs.org/@mantine/colors-generator/-/colors-generator-8.3.13.tgz#4973d3e9fc96cab4c2ad41eb0771e5d9b00e4b7b"
+  integrity sha512-BG2HIws3jjknHddFaDWoOBvl+JK9vUi6RfJmUPofdDaCbGl5MTa8iViU2i2+zC+5feWoI6uf63hcravC5QzZlw==
+
 "@mantine/core@^8.3.12":
   version "8.3.12"
   resolved "https://registry.npmjs.org/@mantine/core/-/core-8.3.12.tgz#84e6c3394f4495ab57019ba2d1f42bb940d6e916"
@@ -3749,16 +3754,18 @@
     "@smart-cloud/wpsuite-core" "^2.0.5"
     aws-amplify "^6.15.9"
 
-"@smart-cloud/ai-kit-ui@^1.1.12":
-  version "1.1.12"
-  resolved "https://registry.npmjs.org/@smart-cloud/ai-kit-ui/-/ai-kit-ui-1.1.12.tgz#23606eda664afedc742b23e8d662581315615bc7"
-  integrity sha512-Wf9YAhD2b/SP8/5AuZ2Jq7IzFIG3w+UrbXpw5PlQ6duioier3x+gemZwFO5FRn40acoWiwJVIRq71IGqhh0SCQ==
+"@smart-cloud/ai-kit-ui@^1.1.14":
+  version "1.1.14"
+  resolved "https://registry.npmjs.org/@smart-cloud/ai-kit-ui/-/ai-kit-ui-1.1.14.tgz#fc7c51c9c8422b3803a64d81941d48a25c7afdd0"
+  integrity sha512-pD7RyF4OItxJ1r6CR5FSsd7f70oHppeqZhzAG4aeSWdb49IE5xNInsk5BINTFWAe7ALrj2cXtcJlC89XhlE6Qg==
   dependencies:
     "@emotion/cache" "^11.14.0"
     "@emotion/react" "^11.14.0"
+    "@mantine/colors-generator" "^8.3.13"
     "@smart-cloud/ai-kit-core" "^1.1.5"
     "@smart-cloud/wpsuite-core" "^2.0.5"
     "@tabler/icons-react" "^3.36.1"
+    chroma-js "^3.2.0"
     react-markdown "^10.1.0"
     rehype-sanitize "^6.0.0"
     rehype-stringify "^10.0.1"
@@ -7978,6 +7985,11 @@ chokidar@^4.0.0:
   integrity sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==
   dependencies:
     readdirp "^4.0.1"
+
+chroma-js@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.npmjs.org/chroma-js/-/chroma-js-3.2.0.tgz#4e9e665290b9bbfece524fccf759d5120e351ff2"
+  integrity sha512-os/OippSlX1RlWWr+QDPcGUZs0uoqr32urfxESG9U93lhUfbnlyckte84Q8P1UQY/qth983AS1JONKmLS4T0nw==
 
 chrome-launcher@^1.2.0:
   version "1.2.1"

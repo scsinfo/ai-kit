@@ -734,6 +734,7 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
       // mark last sent timestamp on successful request completion
       setLastUserSentAt(userMessageCreatedAt);
     } catch (e) {
+      console.error("Error during ask()", e);
       // Cancel: treat as not sent, no error bubble
       if (
         cancelRequestedRef.current ||
@@ -1197,6 +1198,7 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
                   >
                     <Stack
                       gap={4}
+                      w="100%"
                       style={{
                         alignItems: isUser ? "flex-end" : "flex-start",
                       }}
@@ -1359,7 +1361,8 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
                 onClose={cancelReset}
                 centered
                 title={I18n.get("Reset conversation")}
-                withinPortal={false}
+                style={{ position: "fixed" }}
+                left={0}
               >
                 <Text size="sm">
                   {I18n.get("Are you sure you want to reset the conversation?")}
