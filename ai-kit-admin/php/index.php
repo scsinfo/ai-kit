@@ -14,8 +14,8 @@ use WP_Error;
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
-if (file_exists(filename: AI_KIT_PATH . 'ai-kit-admin/model.php')) {
-    require_once AI_KIT_PATH . 'ai-kit-admin/model.php';
+if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/model.php')) {
+    require_once WPSUITE_AI_KIT_PATH . 'admin/model.php';
 }
 class Admin
 {
@@ -32,7 +32,7 @@ class Admin
         );
 
         // WP can return array/object depending on previous versions / serialization.
-        $raw = get_option(AI_KIT_SLUG, $defaultSettings);
+        $raw = get_option(WPSUITE_AI_KIT_SLUG, $defaultSettings);
         $this->settings = AiKitSettings::fromMixed($raw);
         $this->registerRestRoutes();
     }
@@ -48,7 +48,7 @@ class Admin
             __('AI-Kit Settings', 'wpsuite-ai-kit'),
             __('AI-Kit Settings', 'wpsuite-ai-kit'),
             'manage_options',
-            AI_KIT_SLUG,
+            WPSUITE_AI_KIT_SLUG,
             array($this, 'renderAiKitSettingsPage'),
         );
 
@@ -57,7 +57,7 @@ class Admin
             __('AI-Kit Diagnostics', 'wpsuite-ai-kit'),
             __('AI-Kit Diagnostics', 'wpsuite-ai-kit'),
             'manage_options',
-            AI_KIT_SLUG . '-diagnostics',
+            WPSUITE_AI_KIT_SLUG . '-diagnostics',
             array($this, 'renderAiKitSettingsPage'),
         );
 
@@ -67,14 +67,14 @@ class Admin
             }
 
             $script_asset = array();
-            if (file_exists(filename: AI_KIT_PATH . 'ai-kit-admin/dist/index.asset.php')) {
-                $script_asset = require_once(AI_KIT_PATH . 'ai-kit-admin/dist/index.asset.php');
+            if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/index.asset.php')) {
+                $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/index.asset.php');
             }
             $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-webcrypto-vendor', 'wpsuite-mantine-vendor'));
-            $res = wp_enqueue_script('ai-kit-admin-script', AI_KIT_URL . 'ai-kit-admin/dist/index.js', $script_asset['dependencies'], AI_KIT_VERSION, true);
+            $res = wp_enqueue_script('wpsuite-ai-kit-admin-script', WPSUITE_AI_KIT_URL . 'admin/index.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
             // Make the blocks translatable.
             if (function_exists('wp_set_script_translations')) {
-                wp_set_script_translations('ai-kit-admin-script', 'wpsuite-ai-kit', AI_KIT_PATH . 'languages');
+                wp_set_script_translations('wpsuite-ai-kit-admin-script', 'wpsuite-ai-kit', WPSUITE_AI_KIT_PATH . 'languages');
             }
 
             if ($hook === $settings_page) {
@@ -85,9 +85,9 @@ class Admin
                 $page = '';
             }
             $js = '__aikitGlobal.WpSuite.plugins.aiKit.view = ' . wp_json_encode($page) . ';';
-            wp_add_inline_script('ai-kit-admin-script', $js, 'before');
+            wp_add_inline_script('wpsuite-ai-kit-admin-script', $js, 'before');
 
-            wp_enqueue_style('ai-kit-admin-style', AI_KIT_URL . 'ai-kit-admin/dist/index.css', array(), AI_KIT_VERSION);
+            wp_enqueue_style('wpsuite-ai-kit-admin-style', WPSUITE_AI_KIT_URL . 'admin/index.css', array(), WPSUITE_AI_KIT_VERSION);
             wp_enqueue_style('wpsuite-mantine-vendor-style', GATEY_URL . 'assets/css/wpsuite-mantine-vendor.css', array(), \SmartCloud\WPSuite\Hub\VERSION_MANTINE);
         });
 
@@ -104,13 +104,13 @@ class Admin
 
     public function renderAiKitSettingsPage()
     {
-        echo '<div id="ai-kit-admin"></div>';
+        echo '<div id="wpsuite-ai-kit-admin"></div>';
     }
 
     public function initRestApi()
     {
         register_rest_route(
-            AI_KIT_SLUG . '/v1',
+            WPSUITE_AI_KIT_SLUG . '/v1',
             '/update-settings',
             array(
                 'methods' => 'POST',
@@ -154,7 +154,7 @@ class Admin
         );
 
         // Frissített beállítások mentése
-        update_option(AI_KIT_SLUG, $this->settings);
+        update_option(WPSUITE_AI_KIT_SLUG, $this->settings);
         return new WP_REST_Response(array('success' => true, 'message' => __('Settings updated successfully.', 'wpsuite-ai-kit')), 200);
     }
 

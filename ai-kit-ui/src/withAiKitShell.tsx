@@ -14,7 +14,7 @@ import {
 } from "@smart-cloud/ai-kit-core";
 import { useSelect } from "@wordpress/data";
 import { I18n } from "aws-amplify/utils";
-import { type ComponentType, useCallback, useMemo, useState } from "react";
+import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { ShadowBoundary } from "./ShadowBoundary";
 
 export type AiKitShellInjectedProps = {
@@ -47,12 +47,12 @@ export function withAiKitShell<P extends object>(
       colorMode,
       primaryColor,
       primaryShade,
-      className,
-      innerCSS,
+      themeOverrides,
       language,
       direction,
     } = { ...props, ...propOverrides } as AiWorkerProps & P;
 
+    const [host, setHost] = useState<HTMLElement | null>(null);
     const languageInStore: string | undefined | null = useSelect(() =>
       getStoreSelect(store).getLanguage(),
     );
@@ -126,19 +126,19 @@ export function withAiKitShell<P extends object>(
         ].includes(primaryColor) && { primaryColor }),
       ...(primaryShade &&
         Object.keys(primaryShade).length > 0 && {
-          primaryShade: {
-            light:
-              primaryShade.light ??
-              (typeof DEFAULT_THEME.primaryShade === "object"
-                ? DEFAULT_THEME.primaryShade.light
-                : (DEFAULT_THEME.primaryShade ?? 6)),
-            dark:
-              primaryShade.dark ??
-              (typeof DEFAULT_THEME.primaryShade === "object"
-                ? DEFAULT_THEME.primaryShade.dark
-                : (DEFAULT_THEME.primaryShade ?? 6)),
-          },
-        }),
+        primaryShade: {
+          light:
+            primaryShade.light ??
+            (typeof DEFAULT_THEME.primaryShade === "object"
+              ? DEFAULT_THEME.primaryShade.light
+              : (DEFAULT_THEME.primaryShade ?? 6)),
+          dark:
+            primaryShade.dark ??
+            (typeof DEFAULT_THEME.primaryShade === "object"
+              ? DEFAULT_THEME.primaryShade.dark
+              : (DEFAULT_THEME.primaryShade ?? 6)),
+        },
+      }),
       components: {
         Button: {
           styles: { root: { borderRadius: "inherit" } },
@@ -175,35 +175,39 @@ export function withAiKitShell<P extends object>(
       },
     });
 
-    const innerCSSHash = useMemo(() => {
-      return innerCSS ? hashStringDjb2(innerCSS) : "";
-    }, [innerCSS]);
+    const themeOverridesHash = useMemo(() => {
+      return themeOverrides ? hashStringDjb2(themeOverrides) : "";
+    }, [themeOverrides]);
 
-    const injectStyle = useCallback(
-      (rootElement: HTMLDivElement) => {
-        const existingStyle = rootElement.ownerDocument.getElementById(
+    useEffect(
+      () => {
+
+        if (!host) {
+          return;
+        }
+
+        const existingStyle = host.shadowRoot!.getElementById(
           STYLE_TEXT_ID,
         ) as HTMLStyleElement | null;
 
-        if (innerCSS) {
+        if (themeOverrides) {
           if (!existingStyle) {
-            const s = rootElement.ownerDocument.createElement("style");
+            const s = host.shadowRoot!.ownerDocument.createElement("style");
             s.id = STYLE_TEXT_ID;
-            s.setAttribute("data-hash", innerCSSHash);
-            s.textContent = innerCSS;
-            rootElement.appendChild(s);
+            s.setAttribute("data-hash", themeOverridesHash);
+            s.textContent = themeOverrides;
+            host.shadowRoot!.appendChild(s);
           } else {
             const prevHash = existingStyle.getAttribute("data-hash") || "";
-            if (prevHash !== innerCSSHash) {
-              existingStyle.setAttribute("data-hash", innerCSSHash);
-              existingStyle.textContent = innerCSS;
+            if (prevHash !== themeOverridesHash) {
+              existingStyle.textContent = themeOverrides;
             }
           }
         } else if (existingStyle) {
           existingStyle.remove();
         }
       },
-      [innerCSS, innerCSSHash],
+      [host, themeOverrides, themeOverridesHash],
     );
 
     return (
@@ -212,7 +216,7 @@ export function withAiKitShell<P extends object>(
         variation={variation}
         overlayRootId="ai-kit-overlay-root"
         stylesheets={stylesheets}
-        className={className}
+        setHost={setHost}
         rootElementId={
           variation === "modal" && !showOpenButton
             ? "ai-kit-portal-root"
@@ -220,7 +224,6 @@ export function withAiKitShell<P extends object>(
         }
       >
         {({ rootElement }) => {
-          injectStyle(rootElement);
           rootElement.setAttribute(
             "data-ai-kit-variation",
             variation || "default",
@@ -258,8 +261,7 @@ export function withAiKitShell<P extends object>(
     );
   };
 
-  Wrapped.displayName = `withAiKitShell(${
-    RootComponent.displayName ?? RootComponent.name ?? "Component"
-  })`;
+  Wrapped.displayName = `withAiKitShell(${RootComponent.displayName ?? RootComponent.name ?? "Component"
+    })`;
   return Wrapped;
 }

@@ -179,8 +179,7 @@ type AiWorkerProps = {
         light?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
         dark?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
     };
-    className?: string;
-    innerCSS?: string;
+    themeOverrides?: string;
     title?: string;
     onClose: () => void;
 };

@@ -239,7 +239,14 @@ If you build `wpsuite-admin` locally, do it from the Hub repository using the sa
 
 ## Packaging for Deployment
 
-Once all components have been successfully built, archive the project into a deployable WordPress plugin ZIP:
+Ensure the built assets are copied into the simplified plugin layout:
+
+- `ai-kit-main/dist/*` → `main/`
+- `ai-kit-blocks/dist/*` → `blocks/`
+- `ai-kit-admin/php/*` and `ai-kit-admin/dist/*` → `admin/`
+- `wpsuite-admin/php/*` and `wpsuite-admin/dist/*` → `hub-for-wpsuiteio/`
+
+Once the structure matches the layout above, create the distributable ZIP:
 
 ```bash
 git archive --format zip -o ai-kit.zip HEAD

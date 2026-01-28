@@ -132,13 +132,9 @@
     "uid": {
       "type": "string"
     },
-    "customCSS": {
+    "themeOverrides": {
       "type": "string",
-      "default": "selector {\n\t\n}"
-    },
-    "innerCSS": {
-      "type": "string",
-      "default": ":host {\n\t\n}\n.ai-feature-root {\n\t\n}"
+      "default": ":host,.ai-kit-inline-root,.ai-kit-portal-root {\n\t\n}"
     },
     "configB64": {
       "type": "string"
@@ -147,7 +143,7 @@
       "type": "string"
     }
   },
-  "textdomain": "ai-kit",
+  "textdomain": "wpsuite-ai-kit",
   "editorScript": "file:./index.tsx",
   "style": "file:./index.css",
   "render": "file:./render.php",

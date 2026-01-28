@@ -73,7 +73,7 @@ final class AiKit
 
         // Register Gutenberg blocks (summarizer etc.)
         if (function_exists('register_block_type')) {
-            register_block_type(AI_KIT_PATH . 'ai-kit-blocks/dist/ai-feature');
+            register_block_type(WPSUITE_AI_KIT_PATH . 'blocks/ai-feature');
         }
 
         // Assets
@@ -87,14 +87,13 @@ final class AiKit
         add_action('admin_menu', array($this, 'createAdminMenu'), 20);
 
         // Shortcodes
-        add_shortcode('ai-kit-feature', array($this, 'shortcodeFeature'));
-        //add_shortcode('ai-kit-chatbot', array($this, 'shortcodeChatbot'));
+        add_shortcode('wpsuite-ai-kit-feature', array($this, 'shortcodeFeature'));
 
         // Category for custom blocks.
         add_filter('block_categories_all', array($this, 'registerBlockCategory'), 20, 2);
 
         add_filter('no_texturize_shortcodes', function ($shortcodes) {
-            $shortcodes[] = 'ai-kit-feature';
+            $shortcodes[] = 'wpsuite-ai-kit-feature';
             return $shortcodes;
         });
     }
@@ -108,7 +107,7 @@ final class AiKit
                 if (!($post instanceof \WP_Post) || $post->post_type !== 'attachment') {
                     return;
                 }
-                echo '<div id="ai-kit-attachment-metabox-root" data-attachment-id="' . esc_attr((string) $post->ID) . '"></div>';
+                echo '<div id="wpsuite-ai-kit-attachment-metabox-root" data-attachment-id="' . esc_attr((string) $post->ID) . '"></div>';
             },
             'attachment',
             'side',
@@ -118,7 +117,7 @@ final class AiKit
 
     public function registerMediaBulkActions($actions)
     {
-        $actions['ai_kit_preview_ai_metadata'] = __('Preview SEO metadata', 'wpsuite-ai-kit');
+        $actions['wpsuite-ai-kit-preview-ai-metadata'] = __('Preview SEO metadata', 'wpsuite-ai-kit');
         return $actions;
     }
 
@@ -167,9 +166,9 @@ final class AiKit
      */
     public function registerWidgets(): void
     {
-        if (file_exists(AI_KIT_PATH . 'ai-kit-elementor-widgets.php')) {
+        if (file_exists(WPSUITE_AI_KIT_PATH . 'ai-kit-elementor-widgets.php')) {
             add_action('elementor/init', static function () {
-                require_once AI_KIT_PATH . 'ai-kit-elementor-widgets.php';
+                require_once WPSUITE_AI_KIT_PATH . 'ai-kit-elementor-widgets.php';
             });
         }
     }
@@ -194,7 +193,7 @@ final class AiKit
     {
         wp_register_script(
             'wpsuite-webcrypto-vendor',
-            AI_KIT_URL . 'assets/js/wpsuite-webcrypto-vendor.min.js',
+            WPSUITE_AI_KIT_URL . 'assets/js/wpsuite-webcrypto-vendor.min.js',
             array(),
             \SmartCloud\WPSuite\Hub\VERSION_WEBCRYPTO,
             false
@@ -202,39 +201,37 @@ final class AiKit
 
         wp_register_script(
             'wpsuite-mantine-vendor',
-            AI_KIT_URL . 'assets/js/wpsuite-mantine-vendor.min.js',
+            WPSUITE_AI_KIT_URL . 'assets/js/wpsuite-mantine-vendor.min.js',
             array("react", "react-dom"),
             \SmartCloud\WPSuite\Hub\VERSION_MANTINE,
             false
         );
 
         $main_script_asset = array();
-        if (file_exists(filename: AI_KIT_PATH . 'ai-kit-main/dist/index.asset.php')) {
-            $main_script_asset = require(AI_KIT_PATH . 'ai-kit-main/dist/index.asset.php');
+        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'main/index.asset.php')) {
+            $main_script_asset = require(WPSUITE_AI_KIT_PATH . 'main/index.asset.php');
         }
         $main_script_asset['dependencies'] = array_merge($main_script_asset['dependencies'], array('wpsuite-webcrypto-vendor', 'wpsuite-mantine-vendor'));
-        wp_enqueue_script('ai-kit-main-script', AI_KIT_URL . 'ai-kit-main/dist/index.js', $main_script_asset['dependencies'], AI_KIT_VERSION, false);
-        //wp_enqueue_style('ai-kit-main-style', AI_KIT_URL . 'ai-kit-main/dist/index.css', array(), AI_KIT_VERSION);
-        //add_editor_style(AI_KIT_URL . 'ai-kit-main/dist/index.css');
+        wp_enqueue_script('wpsuite-ai-kit-main-script', WPSUITE_AI_KIT_URL . 'main/index.js', $main_script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, false);
 
         $blocks_script_asset = array();
-        if (file_exists(filename: AI_KIT_PATH . 'ai-kit-blocks/dist/index.asset.php')) {
-            $blocks_script_asset = require(AI_KIT_PATH . 'ai-kit-blocks/dist/index.asset.php');
+        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'blocks/index.asset.php')) {
+            $blocks_script_asset = require(WPSUITE_AI_KIT_PATH . 'blocks/index.asset.php');
         }
-        $blocks_script_asset['dependencies'] = array_merge($blocks_script_asset['dependencies'], array('ai-kit-main-script', 'wpsuite-mantine-vendor'));
-        wp_enqueue_script('ai-kit-blocks-script', AI_KIT_URL . 'ai-kit-blocks/dist/index.js', $blocks_script_asset['dependencies'], AI_KIT_VERSION, false);
-        wp_enqueue_style('ai-kit-blocks-style', AI_KIT_URL . 'ai-kit-blocks/dist/index.css', array(), AI_KIT_VERSION);
-        add_editor_style(AI_KIT_URL . 'ai-kit-blocks/dist/index.css');
+        $blocks_script_asset['dependencies'] = array_merge($blocks_script_asset['dependencies'], array('wpsuite-ai-kit-main-script', 'wpsuite-mantine-vendor'));
+        wp_enqueue_script('wpsuite-ai-kit-blocks-script', WPSUITE_AI_KIT_URL . 'blocks/index.js', $blocks_script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, false);
+        wp_enqueue_style('wpsuite-ai-kit-blocks-style', WPSUITE_AI_KIT_URL . 'blocks/index.css', array(), WPSUITE_AI_KIT_VERSION);
+        add_editor_style(WPSUITE_AI_KIT_URL . 'blocks/index.css');
 
         // Build data passed to JS.
         $settings = $this->admin->getSettings();
         $data = array(
-            'key' => AI_KIT_SLUG,
-            'version' => AI_KIT_VERSION,
+            'key' => WPSUITE_AI_KIT_SLUG,
+            'version' => WPSUITE_AI_KIT_VERSION,
             'status' => 'initializing',
             'plugin' => array(),
             'settings' => $settings,
-            'restUrl' => rest_url(AI_KIT_SLUG . '/v1'),
+            'restUrl' => rest_url(WPSUITE_AI_KIT_SLUG . '/v1'),
             'nonce' => wp_create_nonce('wp_rest'),
         );
         $js = 'const __aikitGlobal = (typeof globalThis !== "undefined") ? globalThis : window;
@@ -242,11 +239,11 @@ __aikitGlobal.WpSuite.plugins.aiKit = {};
 Object.assign(__aikitGlobal.WpSuite.plugins.aiKit, ' . wp_json_encode($data) . ');
 __aikitGlobal.WpSuite.constants = __aikitGlobal.WpSuite.constants ?? {};
 __aikitGlobal.WpSuite.constants.aiKit = {
-    mantineCssHref: "' . AI_KIT_URL . 'assets/css/wpsuite-mantine-vendor.css",
-    aiKitUiCssHref: "' . AI_KIT_URL . 'ai-kit-main/dist/index.css"
+    mantineCssHref: "' . WPSUITE_AI_KIT_URL . 'assets/css/wpsuite-mantine-vendor.css",
+    aiKitUiCssHref: "' . WPSUITE_AI_KIT_URL . 'main/index.css"
 };
 ';
-        wp_add_inline_script('ai-kit-main-script', $js, 'before');
+        wp_add_inline_script('wpsuite-ai-kit-main-script', $js, 'before');
     }
 
     public function enqueueAdminAssets($hook): void
@@ -263,14 +260,11 @@ __aikitGlobal.WpSuite.constants.aiKit = {
         }
 
         $script_asset = array();
-        if (file_exists(filename: AI_KIT_PATH . 'ai-kit-admin/dist/media.asset.php')) {
-            $script_asset = require_once(AI_KIT_PATH . 'ai-kit-admin/dist/media.asset.php');
+        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/media.asset.php')) {
+            $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/media.asset.php');
         }
-        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('ai-kit-main-script'));
-        wp_enqueue_script('ai-kit-media-script', AI_KIT_URL . 'ai-kit-admin/dist/media.js', $script_asset['dependencies'], AI_KIT_VERSION, true);
-
-        //wp_enqueue_style('ai-kit-components-style', AI_KIT_URL . 'ai-kit-admin/dist/components.css', array(), AI_KIT_VERSION);
-        //add_editor_style(AI_KIT_URL . 'ai-kit-admin/dist/components.css');
+        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-ai-kit-main-script'));
+        wp_enqueue_script('wpsuite-ai-kit-media-script', WPSUITE_AI_KIT_URL . 'admin/media.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
     }
 
     /**
@@ -279,39 +273,36 @@ __aikitGlobal.WpSuite.constants.aiKit = {
     public function enqueueEditorAssets(): void
     {
         $script_asset = array();
-        if (file_exists(filename: AI_KIT_PATH . 'ai-kit-admin/dist/media.asset.php')) {
-            $script_asset = require_once(AI_KIT_PATH . 'ai-kit-admin/dist/media.asset.php');
+        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/media.asset.php')) {
+            $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/media.asset.php');
         }
-        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('ai-kit-main-script'));
-        wp_enqueue_script('ai-kit-media-script', AI_KIT_URL . 'ai-kit-admin/dist/media.js', $script_asset['dependencies'], AI_KIT_VERSION, true);
+        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-ai-kit-main-script'));
+        wp_enqueue_script('wpsuite-ai-kit-media-script', WPSUITE_AI_KIT_URL . 'admin/media.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
 
         $script_asset = array();
-        if (file_exists(filename: AI_KIT_PATH . 'ai-kit-admin/dist/sidebar.asset.php')) {
-            $script_asset = require_once(AI_KIT_PATH . 'ai-kit-admin/dist/sidebar.asset.php');
+        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/sidebar.asset.php')) {
+            $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/sidebar.asset.php');
         }
         $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-webcrypto-vendor'));
-        wp_enqueue_script('ai-kit-sidebar-script', AI_KIT_URL . 'ai-kit-admin/dist/sidebar.js', $script_asset['dependencies'], AI_KIT_VERSION, true);
+        wp_enqueue_script('wpsuite-ai-kit-sidebar-script', WPSUITE_AI_KIT_URL . 'admin/sidebar.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
 
         $script_asset = array();
-        if (file_exists(filename: AI_KIT_PATH . 'ai-kit-admin/dist/langutils.asset.php')) {
-            $script_asset = require_once(AI_KIT_PATH . 'ai-kit-admin/dist/langutils.asset.php');
+        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/langutils.asset.php')) {
+            $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/langutils.asset.php');
         }
         $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-webcrypto-vendor'));
-        wp_enqueue_script('ai-kit-langutils-script', AI_KIT_URL . 'ai-kit-admin/dist/langutils.js', $script_asset['dependencies'], AI_KIT_VERSION, true);
+        wp_enqueue_script('wpsuite-ai-kit-langutils-script', WPSUITE_AI_KIT_URL . 'admin/langutils.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
 
         $script_asset = array();
-        if (file_exists(filename: AI_KIT_PATH . 'ai-kit-admin/dist/imgextra.asset.php')) {
-            $script_asset = require_once(AI_KIT_PATH . 'ai-kit-admin/dist/imgextra.asset.php');
+        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/imgextra.asset.php')) {
+            $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/imgextra.asset.php');
         }
         $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-webcrypto-vendor'));
-        wp_enqueue_script('ai-kit-imgextra-script', AI_KIT_URL . 'ai-kit-admin/dist/imgextra.js', $script_asset['dependencies'], AI_KIT_VERSION, true);
-
-        //wp_enqueue_style('ai-kit-components-style', AI_KIT_URL . 'ai-kit-admin/dist/components.css', array(), AI_KIT_VERSION);
-        //add_editor_style(AI_KIT_URL . 'ai-kit-admin/dist/components.css');
+        wp_enqueue_script('wpsuite-ai-kit-imgextra-script', WPSUITE_AI_KIT_URL . 'admin/imgextra.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
     }
 
     /**
-     * Shortcode handler for [ai-kit-feature]
+     * Shortcode handler for [wpsuite-ai-kit-feature]
      */
     public function shortcodeFeature($atts = array(), $content = null): string
     {
@@ -341,7 +332,6 @@ __aikitGlobal.WpSuite.constants.aiKit = {
             'primaryShade' => null,
             'colors' => null,
             'uid' => strtolower(\function_exists('wp_generate_password') ? \wp_generate_password(8, false, false) : substr(md5(uniqid('', true)), 0, 8)),
-            'customCSS' => null,
             'innerCSS' => null,
         );
 
@@ -441,36 +431,6 @@ __aikitGlobal.WpSuite.constants.aiKit = {
     }
 
     /**
-     * Shortcode handler for [ai-kit-chatbot]
-     */
-    public function shortcodeChatbot($atts = array(), $content = null): string
-    {
-        $a = shortcode_atts(
-            array(
-                'component' => null,
-            ),
-            $atts
-        );
-        $is_preview = is_admin();
-        if (!$is_preview && did_action('elementor/loaded') && class_exists('\Elementor\Plugin')) {
-            $plugin = \Elementor\Plugin::$instance;
-            if (isset($plugin->preview) && method_exists($plugin->preview, 'is_preview_mode')) {
-                $is_preview = $plugin->preview->is_preview_mode();
-            }
-        }
-        $attrs = array(
-            'component' => $a['component'] ?? $block['attrs']['component'] ?? 'div',
-        );
-        $newBlock = [
-            'blockName' => 'ai-kit/chatbot',
-            'attrs' => $attrs,
-        ];
-        $content = render_block($newBlock);
-        $content = str_replace("ai-kit-is-preview", ($is_preview ? 'true' : 'false'), $content);
-        return $content;
-    }
-
-    /**
      * Add settings page in wp-admin.
      */
     public function createAdminMenu(): void
@@ -480,11 +440,11 @@ __aikitGlobal.WpSuite.constants.aiKit = {
 
     private function defineConstants(): void
     {
-        define('AI_KIT_VERSION', VERSION);
-        define('AI_KIT_SLUG', 'wpsuite-ai-kit');
+        define('WPSUITE_AI_KIT_VERSION', VERSION);
+        define('WPSUITE_AI_KIT_SLUG', 'wpsuite-ai-kit');
 
-        define('AI_KIT_PATH', plugin_dir_path(__FILE__));
-        define('AI_KIT_URL', plugin_dir_url(__FILE__));
+        define('WPSUITE_AI_KIT_PATH', plugin_dir_path(__FILE__));
+        define('WPSUITE_AI_KIT_URL', plugin_dir_url(__FILE__));
     }
 
     /**
@@ -493,13 +453,13 @@ __aikitGlobal.WpSuite.constants.aiKit = {
     private function includes(): void
     {
         // Hub admin classes.
-        if (file_exists(AI_KIT_PATH . 'hub-loader.php')) {
-            require_once AI_KIT_PATH . 'hub-loader.php';
+        if (file_exists(WPSUITE_AI_KIT_PATH . 'hub-loader.php')) {
+            require_once WPSUITE_AI_KIT_PATH . 'hub-loader.php';
         }
 
         // Admin classes.
-        if (file_exists(AI_KIT_PATH . 'ai-kit-admin/index.php')) {
-            require_once AI_KIT_PATH . 'ai-kit-admin/index.php';
+        if (file_exists(WPSUITE_AI_KIT_PATH . 'admin/index.php')) {
+            require_once WPSUITE_AI_KIT_PATH . 'admin/index.php';
         }
         if (class_exists('\SmartCloud\WPSuite\AiKit\Admin')) {
             $this->admin = new \SmartCloud\WPSuite\AiKit\Admin();
@@ -539,10 +499,10 @@ __aikitGlobal.WpSuite.constants.aiKit = {
 }
 
 // Bootstrap plugin.
-if (defined('AI_KIT_BOOTSTRAPPED')) {
+if (defined('WPSUITE_AI_KIT_BOOTSTRAPPED')) {
     return;
 }
-define('AI_KIT_BOOTSTRAPPED', true);
+define('WPSUITE_AI_KIT_BOOTSTRAPPED', true);
 
 add_action('init', 'SmartCloud\WPSuite\AiKit\aikitInit', 15);
 add_action('plugins_loaded', 'SmartCloud\WPSuite\AiKit\aikitLoaded', 20);

@@ -256,16 +256,15 @@ const pages = {
         The shade index (0–9) used for the primary color in dark mode.
       </Text>
 
-      <Title order={3} mt="md" id="chatbot-inner-css">
-        <span className="highlightable">Inline CSS</span>
+      <Title order={3} mt="md" id="chatbot-theme-overrides">
+        <span className="highlightable">Theme Overrides</span>
       </Title>
       <Text>
-        Optional CSS rules injected inside the chatbot root container. Use this
-        to tweak borders, spacing, or fonts when theme options are not enough.
-        Override the exposed design tokens or target elements inside the widget,
-        for example{" "}
+        Optional scoped CSS injected into the chatbot’s root container. Primarily intended for overriding exposed design tokens
+        (e.g. --ai-kit*, --mantine*), but you can also add extra rules to fine-tune spacing, borders, and typography
+        when the built-in options aren’t enough. For example:{" "}
         <Code>
-          {":host, #ai-kit-inline-root { --ai-kit-chat-border-radius: 16px; }"}
+          {":host, #ai-kit-inline-root, #ai-kit-portal-root { --ai-kit-chat-border-radius: 16px; }"}
         </Code>{" "}
         to round the chat window.
       </Text>

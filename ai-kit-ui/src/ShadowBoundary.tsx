@@ -1,6 +1,6 @@
 import createCache from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { SetStateAction, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 export type ShadowBoundaryMode = "local" | "overlay";
@@ -8,9 +8,6 @@ export type ShadowBoundaryMode = "local" | "overlay";
 export type ShadowBoundaryProps = {
   /** Stylesheets to inject into the shadow root (as <link rel="stylesheet">). */
   stylesheets: string[];
-
-  /** Optional class name applied to the host element. */
-  className?: string;
 
   /** ID of the element inside the shadow root used as the portal target. */
   rootElementId: string;
@@ -30,6 +27,7 @@ export type ShadowBoundaryProps = {
    */
   overlayRootId?: string;
 
+  setHost: React.Dispatch<SetStateAction<HTMLElement | null>>;
   children: (api: {
     /** Portal target element inside the shadow root. */
     rootElement: HTMLDivElement;
@@ -88,11 +86,11 @@ function installAiKitPropertyRegistry() {
 
 export function ShadowBoundary({
   stylesheets,
-  className,
   children,
   rootElementId,
   mode = "local",
   overlayRootId = "ai-kit-overlay-root",
+  setHost,
 }: ShadowBoundaryProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
 
@@ -135,6 +133,7 @@ export function ShadowBoundary({
     } else {
       host = hostRef.current;
     }
+    setHost(host);
 
     // 2) Ensure shadow root
     const shadow = host.shadowRoot ?? host.attachShadow({ mode: "open" });
@@ -207,7 +206,6 @@ export function ShadowBoundary({
   return (
     <div
       ref={hostRef}
-      className={className}
       style={{
         outline: "none",
         boxShadow: "none",
@@ -216,11 +214,11 @@ export function ShadowBoundary({
     >
       {portalTarget && shadowRoot && emotionCache
         ? createPortal(
-            <CacheProvider value={emotionCache}>
-              {children({ rootElement: portalTarget, shadowRoot })}
-            </CacheProvider>,
-            portalTarget,
-          )
+          <CacheProvider value={emotionCache}>
+            {children({ rootElement: portalTarget, shadowRoot })}
+          </CacheProvider>,
+          portalTarget,
+        )
         : null}
     </div>
   );

@@ -81,7 +81,6 @@ try {
           console.warn("Invalid shortcode config", e);
         }
       }
-      const className = el.getAttribute("data-class");
       const isPreview = el.getAttribute("data-is-preview") === "true";
 
       const yamlInputSelector = fromYaml<string>(yamlConfig, "inputSelector");
@@ -309,27 +308,9 @@ try {
         ) ??
         undefined;
 
-      const yamlInnerCSS = fromYaml<string>(yamlConfig, "innerCSS");
-      const innerCSS =
-        yamlInnerCSS ?? el.getAttribute("data-inner-css") ?? undefined;
-
-      const yamlUid = fromYaml<string>(yamlConfig, "uid");
-      const uid = yamlUid ?? el.getAttribute("data-uid") ?? undefined;
-      const cssClass = uid ? `.wp-block-css-box-${uid}` : undefined;
-      const yamlCustomCSS = fromYaml<string>(yamlConfig, "customCSS");
-      if (yamlCustomCSS && cssClass) {
-        const styleId = `css-box-${uid}`;
-        const currentStyle = document.getElementById(styleId);
-        if (currentStyle) {
-          currentStyle.remove();
-        }
-        const scoped = yamlCustomCSS.replaceAll("selector", cssClass);
-
-        const tag = document.createElement("style");
-        tag.id = styleId;
-        tag.appendChild(document.createTextNode(scoped));
-        document.head.appendChild(tag);
-      }
+      const yamlThemeOverrides = fromYaml<string>(yamlConfig, "themeOverrides");
+      const themeOverrides =
+        yamlThemeOverrides ?? el.getAttribute("data-theme-overrides") ?? undefined;
 
       const root = createRoot(el);
       if (cache.has(id)) {
@@ -341,7 +322,6 @@ try {
         <StrictMode>
           <App
             isPreview={isPreview}
-            className={className || undefined}
             store={store}
             inputSelector={inputSelector}
             outputSelector={outputSelector}
@@ -365,16 +345,16 @@ try {
             optionsDisplay={optionsDisplay}
             default={defaults}
             allowOverride={allowOverride}
-            innerCSS={innerCSS}
+            themeOverrides={themeOverrides}
           />
         </StrictMode>,
       );
     }
   };
 
-  jQuery(document).on("ai-kit-feature-block", (_, id) => call(id));
+  jQuery(document).on("wpsuite-ai-kit-feature-block", (_, id) => call(id));
   jQuery(window).on("elementor/frontend/init", function () {
-    jQuery(document).on("ai-kit-feature-block", (_, id) => call(id));
+    jQuery(document).on("wpsuite-ai-kit-feature-block", (_, id) => call(id));
   });
 } catch (err) {
   console.error(err);

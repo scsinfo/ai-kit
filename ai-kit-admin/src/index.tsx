@@ -68,7 +68,7 @@ if (!aiKit) {
 }
 getStore().then(async (store) => {
   const view = aiKit?.view ?? "settings";
-  const root = createRoot(document.getElementById("ai-kit-admin")!);
+  const root = createRoot(document.getElementById("wpsuite-ai-kit-admin")!);
   if (view === "diagnostics") {
     root.render(
       <StrictMode>
@@ -80,7 +80,7 @@ getStore().then(async (store) => {
             </ModalsProvider>
           </MantineProvider>
         </QueryClientProvider>
-      </StrictMode>
+      </StrictMode>,
     );
   } else {
     root.render(
@@ -93,7 +93,7 @@ getStore().then(async (store) => {
             </ModalsProvider>
           </MantineProvider>
         </QueryClientProvider>
-      </StrictMode>
+      </StrictMode>,
     );
   }
 });

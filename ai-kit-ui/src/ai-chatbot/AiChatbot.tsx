@@ -53,9 +53,8 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
 // New: history storage support
 const DEFAULT_HISTORY_STORAGE: HistoryStorageMode = "localstorage";
-const HISTORY_STORAGE_KEY = `ai-kit-chatbot-history-v1:${
-  typeof window !== "undefined" ? window.location.hostname : "unknown"
-}`;
+const HISTORY_STORAGE_KEY = `ai-kit-chatbot-history-v1:${typeof window !== "undefined" ? window.location.hostname : "unknown"
+  }`;
 
 export const DEFAULT_CHATBOT_LABELS: Required<AiChatbotLabels> = {
   modalTitle: "AI Assistant",
@@ -216,7 +215,6 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
     openButtonIcon,
     showOpenButtonTitle = true,
     showOpenButtonIcon = true,
-    className,
     colorMode,
     language,
     onClose,
@@ -346,8 +344,8 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
   const rootClassName = useMemo(() => {
     const base = "ai-docs-ask";
     const pos = `ai-open-btn--${openButtonPosition}`;
-    return className ? `${base} ${pos} ${className}` : `${base} ${pos}`;
-  }, [className, openButtonPosition]);
+    return `${base} ${pos}`;
+  }, [openButtonPosition]);
 
   const adjustChatHeight = useCallback(() => {
     const el = chatContainerRef.current;
@@ -597,7 +595,7 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
       try {
         const activeSessionId =
           sessionRef.current &&
-          Date.now() - sessionRef.current.storedAt < TWENTY_FOUR_HOURS_MS
+            Date.now() - sessionRef.current.storedAt < TWENTY_FOUR_HOURS_MS
             ? sessionRef.current.id
             : undefined;
         if (!activeSessionId) return;
@@ -682,7 +680,7 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
     try {
       const activeSessionId =
         sessionRef.current &&
-        Date.now() - sessionRef.current.storedAt < TWENTY_FOUR_HOURS_MS
+          Date.now() - sessionRef.current.storedAt < TWENTY_FOUR_HOURS_MS
           ? sessionRef.current.id
           : undefined;
 

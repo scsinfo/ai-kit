@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
-const AI_KIT_HUB_VERSION = '2.0.5';
+const WPSUITE_AI_KIT_HUB_VERSION = '2.0.5';
 
 final class AiKitHubLoader
 {
@@ -104,7 +104,7 @@ final class AiKitHubLoader
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
         }
 
-        if (!empty($GLOBALS['wpsuitehub_menu_parent']) || is_plugin_active('hub-for-wpsuiteio/hub-for-wpsuiteio.php')) {
+        if (!empty($GLOBALS['wpsuitehub_menu_parent'])) {
             return false;
         }
 
@@ -126,8 +126,8 @@ final class AiKitHubLoader
         $owner_is_valid = in_array(WP_PLUGIN_DIR . '/' . $owner, wp_get_active_and_valid_plugins(), true);
         $owner_inactive = !$owner_is_active || !$owner_is_valid || !$owner_exists;
 
-        $owner_version_is_smaller = version_compare($owner_version, AI_KIT_HUB_VERSION) === -1;
-        $owner_version_equals = version_compare($owner_version, AI_KIT_HUB_VERSION) === 0;
+        $owner_version_is_smaller = version_compare($owner_version, WPSUITE_AI_KIT_HUB_VERSION) === -1;
+        $owner_version_equals = version_compare($owner_version, WPSUITE_AI_KIT_HUB_VERSION) === 0;
 
         // If there is no owner yet, try to claim it
         if ($owner_missing || $owner_is_me || $owner_inactive || $owner_version_is_smaller) {
@@ -137,9 +137,9 @@ final class AiKitHubLoader
                 $GLOBALS['wpsuite_fallback_parent_added'] = true;
                 $result = true;
 
-                define('WPSUITE_VERSION', AI_KIT_HUB_VERSION);
-                define('WPSUITE_PATH', plugin_dir_path(__FILE__) . 'wpsuite-admin/');
-                define('WPSUITE_URL', plugin_dir_url(__FILE__) . 'wpsuite-admin/');
+                define('WPSUITE_VERSION', WPSUITE_AI_KIT_HUB_VERSION);
+                define('WPSUITE_PATH', plugin_dir_path(__FILE__) . WPSUITE_SLUG . '/');
+                define('WPSUITE_URL', plugin_dir_url(__FILE__) . WPSUITE_SLUG . '/');
                 define('WPSUITE_READY_HOOK', WPSUITE_SLUG . '/ready');
 
                 if (file_exists(WPSUITE_PATH . 'index.php')) {
@@ -150,12 +150,12 @@ final class AiKitHubLoader
                 }
                 if (!$owner_is_me || !$owner_version_equals) {
                     update_option($owner_option, $this->plugin, false);
-                    update_option($owner_option . '/version', AI_KIT_HUB_VERSION, false);
+                    update_option($owner_option . '/version', WPSUITE_AI_KIT_HUB_VERSION, false);
                 }
             }
             if (!$owner_is_me && $owner_version_is_smaller) {
                 update_option($owner_option, $this->plugin, false);
-                update_option($owner_option . '/version', AI_KIT_HUB_VERSION, false);
+                update_option($owner_option . '/version', WPSUITE_AI_KIT_HUB_VERSION, false);
             }
             return $result;
         }

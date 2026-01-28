@@ -53,10 +53,10 @@ function ensureModalBox() {
   const info = details.querySelector(".attachment-info");
   if (!info) return;
 
-  let host = details.querySelector("#ai-kit-media-modal-box");
+  let host = details.querySelector("#wpsuite-ai-kit-media-modal-box");
   if (!host) {
     host = document.createElement("div");
-    host.id = "ai-kit-media-modal-box";
+    host.id = "wpsuite-ai-kit-media-modal-box";
     host.setAttribute("style", "margin: 0 0 10px 0;");
     info.parentElement?.insertBefore(host, info);
   }
@@ -243,8 +243,8 @@ export function MediaLibrary(props: { ids: number[]; onClose: () => void }) {
               ].map(({ label, value }) => {
                 const display =
                   value !== undefined &&
-                  value !== null &&
-                  `${value}`.trim() !== ""
+                    value !== null &&
+                    `${value}`.trim() !== ""
                     ? value
                     : "—";
                 return (
@@ -272,7 +272,7 @@ export function MediaLibrary(props: { ids: number[]; onClose: () => void }) {
 function ensureGridBulkButton() {
   // only show button in bulk-select mode
   if (!isGridBulkSelectMode()) {
-    const old = document.getElementById("ai-kit-grid-preview-btn");
+    const old = document.getElementById("wpsuite-ai-kit-grid-preview-btn");
     if (old) old.remove();
     return;
   }
@@ -283,11 +283,11 @@ function ensureGridBulkButton() {
   if (!deleteBtn) return;
 
   let btn = document.getElementById(
-    "ai-kit-grid-preview-btn",
+    "wpsuite-ai-kit-grid-preview-btn",
   ) as HTMLButtonElement | null;
   if (!btn) {
     btn = document.createElement("button");
-    btn.id = "ai-kit-grid-preview-btn";
+    btn.id = "wpsuite-ai-kit-grid-preview-btn";
     btn.type = "button";
     btn.className = "button button-primary";
     btn.textContent = __("Preview SEO metadata", TEXT_DOMAIN);
@@ -303,7 +303,7 @@ function ensureGridBulkButton() {
       const ids = getGridSelectedIds();
       if (!ids.length) return;
 
-      const hostId = "ai-kit-bulk-overlay-host";
+      const hostId = "wpsuite-ai-kit-bulk-overlay-host";
       let host = document.getElementById(hostId);
       if (!host) {
         host = document.createElement("div");
@@ -346,7 +346,7 @@ function initObservers() {
 }
 
 function initAttachmentMetabox() {
-  const host = document.getElementById("ai-kit-attachment-metabox-root");
+  const host = document.getElementById("wpsuite-ai-kit-attachment-metabox-root");
   if (!host) return;
 
   const idStr = host.getAttribute("data-attachment-id") || "";
@@ -370,7 +370,7 @@ function maybeStartBulkFromQuery() {
 
   if (!ids.length) return;
 
-  const hostId = "ai-kit-bulk-overlay-host";
+  const hostId = "wpsuite-ai-kit-bulk-overlay-host";
   let host = document.getElementById(hostId);
   if (!host) {
     host = document.createElement("div");

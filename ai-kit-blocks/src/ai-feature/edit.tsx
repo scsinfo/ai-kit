@@ -29,7 +29,7 @@ import {
   TextareaControl,
   TextControl,
 } from "@wordpress/components";
-import { useLayoutEffect, useRef } from "@wordpress/element";
+import { useRef } from "@wordpress/element";
 import { __ } from "@wordpress/i18n";
 import {
   createRef,
@@ -79,9 +79,9 @@ export interface EditorBlockProps {
     instructions?: string;
     tone?: WriteArgs["tone"] | RewriteArgs["tone"];
     length?:
-      | WriteArgs["length"]
-      | RewriteArgs["length"]
-      | SummarizeArgs["length"];
+    | WriteArgs["length"]
+    | RewriteArgs["length"]
+    | SummarizeArgs["length"];
     type?: SummarizeArgs["type"];
     outputLanguage?: AiKitLanguageCode;
     outputFormat?: "plain-text" | "markdown" | "html";
@@ -99,36 +99,9 @@ export interface EditorBlockProps {
   primaryShade?: AiFeatureArgs["primaryShade"];
   colors?: AiFeatureArgs["colors"];
   uid?: string;
-  customCSS?: string;
-  innerCSS?: string;
+  themeOverrides?: string;
 }
 
-const useScopedCssCompat = (id: string, css: string) => {
-  const latestCssRef = useRef(css);
-
-  useLayoutEffect(() => {
-    latestCssRef.current = css;
-  }, [css]);
-
-  useLayoutEffect(() => {
-    const iframe = document.querySelector(
-      'iframe[name="editor-canvas"], iframe.block-editor-iframe',
-    ) as HTMLIFrameElement | null;
-    const doc = iframe?.contentDocument;
-    if (!doc?.head) return;
-
-    let tag = doc.getElementById(id) as HTMLStyleElement | null;
-    if (!tag) {
-      tag = doc.createElement("style");
-      tag.id = id;
-      doc.head.appendChild(tag);
-    }
-    if (tag.textContent !== latestCssRef.current) {
-      tag.textContent = latestCssRef.current;
-    }
-    return () => tag?.remove();
-  }, [id, css]);
-};
 const Divider = () => (
   <div style={{ borderTop: "1px solid #ddd", margin: "12px 0" }} />
 );
@@ -160,8 +133,7 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
     colors,
     primaryShade,
     optionsDisplay,
-    customCSS,
-    innerCSS,
+    themeOverrides,
     uid,
   } = attributes;
 
@@ -184,16 +156,7 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
 
   const editorRef = createRef<HTMLDivElement>();
 
-  const scopedCSS = attributes.customCSS?.replace(
-    /selector/g,
-    `.wp-block-css-box-${uid}`,
-  );
-
-  useScopedCssCompat(`css-${uid}`, scopedCSS || "");
-
-  const blockProps = useBlockProps({
-    className: `wp-block-css-box-${uid}`,
-  });
+  const blockProps = useBlockProps();
   const { ...innerBlocksProps } = useInnerBlocksProps(blockProps);
 
   const defaultTitle = useMemo(() => {
@@ -577,30 +540,30 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
                   options={
                     mode === "write"
                       ? [
-                          {
-                            label: __("Neutral (default)", TEXT_DOMAIN),
-                            value: "neutral",
-                          },
-                          {
-                            label: __("Formal", TEXT_DOMAIN),
-                            value: "formal",
-                          },
-                          { label: __("Casual", TEXT_DOMAIN), value: "casual" },
-                        ]
+                        {
+                          label: __("Neutral (default)", TEXT_DOMAIN),
+                          value: "neutral",
+                        },
+                        {
+                          label: __("Formal", TEXT_DOMAIN),
+                          value: "formal",
+                        },
+                        { label: __("Casual", TEXT_DOMAIN), value: "casual" },
+                      ]
                       : [
-                          {
-                            label: __("As-is (default)", TEXT_DOMAIN),
-                            value: "as-is",
-                          },
-                          {
-                            label: __("More Formal", TEXT_DOMAIN),
-                            value: "more-formal",
-                          },
-                          {
-                            label: __("More Casual", TEXT_DOMAIN),
-                            value: "more-casual",
-                          },
-                        ]
+                        {
+                          label: __("As-is (default)", TEXT_DOMAIN),
+                          value: "as-is",
+                        },
+                        {
+                          label: __("More Formal", TEXT_DOMAIN),
+                          value: "more-formal",
+                        },
+                        {
+                          label: __("More Casual", TEXT_DOMAIN),
+                          value: "more-casual",
+                        },
+                      ]
                   }
                   onChange={(value) => {
                     setAttributes({
@@ -636,18 +599,18 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
             {(mode === "write" ||
               mode === "rewrite" ||
               mode === "summarize") && (
-              <>
-                <RadioControl
-                  label={__("Length", TEXT_DOMAIN)}
-                  selected={
-                    defaults?.length ||
-                    (mode === "write" || mode === "summarize"
-                      ? "short"
-                      : "as-is")
-                  }
-                  options={
-                    mode === "write" || mode === "summarize"
-                      ? [
+                <>
+                  <RadioControl
+                    label={__("Length", TEXT_DOMAIN)}
+                    selected={
+                      defaults?.length ||
+                      (mode === "write" || mode === "summarize"
+                        ? "short"
+                        : "as-is")
+                    }
+                    options={
+                      mode === "write" || mode === "summarize"
+                        ? [
                           {
                             label: __("Short (default)", TEXT_DOMAIN),
                             value: "short",
@@ -658,7 +621,7 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
                           },
                           { label: __("Long", TEXT_DOMAIN), value: "long" },
                         ]
-                      : [
+                        : [
                           {
                             label: __("As-is (default)", TEXT_DOMAIN),
                             value: "as-is",
@@ -672,39 +635,39 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
                             value: "longer",
                           },
                         ]
-                  }
-                  onChange={(value) => {
-                    setAttributes({
-                      default: { ...defaults, length: value },
-                    });
-                  }}
-                  help={__(
-                    "Select the desired length for the AI output.",
-                    TEXT_DOMAIN,
-                  )}
-                />
-                <CheckboxControl
-                  label={__("Overridable", TEXT_DOMAIN)}
-                  checked={
-                    allowOverride?.length === undefined || allowOverride?.length
-                  }
-                  onChange={(value) => {
-                    setAttributes({
-                      allowOverride: {
-                        ...allowOverride,
-                        length:
-                          value !== undefined ? value : allowOverride?.length,
-                      },
-                    });
-                  }}
-                  help={__(
-                    "Allow users to override the default length when using the block.",
-                    TEXT_DOMAIN,
-                  )}
-                />
-                <Divider />
-              </>
-            )}
+                    }
+                    onChange={(value) => {
+                      setAttributes({
+                        default: { ...defaults, length: value },
+                      });
+                    }}
+                    help={__(
+                      "Select the desired length for the AI output.",
+                      TEXT_DOMAIN,
+                    )}
+                  />
+                  <CheckboxControl
+                    label={__("Overridable", TEXT_DOMAIN)}
+                    checked={
+                      allowOverride?.length === undefined || allowOverride?.length
+                    }
+                    onChange={(value) => {
+                      setAttributes({
+                        allowOverride: {
+                          ...allowOverride,
+                          length:
+                            value !== undefined ? value : allowOverride?.length,
+                        },
+                      });
+                    }}
+                    help={__(
+                      "Allow users to override the default length when using the block.",
+                      TEXT_DOMAIN,
+                    )}
+                  />
+                  <Divider />
+                </>
+              )}
             {mode === "summarize" && (
               <>
                 <RadioControl
@@ -854,9 +817,9 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
                 })),
                 ...(colors
                   ? Object.keys(colors).map((color) => ({
-                      label: color,
-                      value: color,
-                    }))
+                    label: color,
+                    value: color,
+                  }))
                   : []),
               ]}
               onChange={(value) => {
@@ -1016,16 +979,16 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
                       value === "" || value === null || value === undefined
                         ? undefined
                         : (parseInt(value!) as
-                            | 0
-                            | 1
-                            | 2
-                            | 3
-                            | 4
-                            | 5
-                            | 6
-                            | 7
-                            | 8
-                            | 9),
+                          | 0
+                          | 1
+                          | 2
+                          | 3
+                          | 4
+                          | 5
+                          | 6
+                          | 7
+                          | 8
+                          | 9),
                   },
                 });
               }}
@@ -1049,16 +1012,16 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
                       value === "" || value === null || value === undefined
                         ? undefined
                         : (parseInt(value!) as
-                            | 0
-                            | 1
-                            | 2
-                            | 3
-                            | 4
-                            | 5
-                            | 6
-                            | 7
-                            | 8
-                            | 9),
+                          | 0
+                          | 1
+                          | 2
+                          | 3
+                          | 4
+                          | 5
+                          | 6
+                          | 7
+                          | 8
+                          | 9),
                   },
                 });
               }}
@@ -1069,22 +1032,12 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
             />
             <Divider />
             <TextareaControl
-              label={__("Custom CSS", TEXT_DOMAIN)}
+              label={__("Theme Overrides", TEXT_DOMAIN)}
               __nextHasNoMarginBottom
-              value={customCSS || ""}
-              onChange={(v) => setAttributes({ customCSS: v })}
+              value={themeOverrides || ""}
+              onChange={(v) => setAttributes({ themeOverrides: v })}
               help={__(
-                "Add custom CSS styles for the AI-Kit Feature block. Use 'selector' to target the block container's host.",
-                TEXT_DOMAIN,
-              )}
-            />
-            <TextareaControl
-              label={__("Inner CSS", TEXT_DOMAIN)}
-              __nextHasNoMarginBottom
-              value={innerCSS || ""}
-              onChange={(v) => setAttributes({ innerCSS: v })}
-              help={__(
-                "Add raw CSS styles injected into the AI-Kit Feature block’s shadow DOM.",
+                "Add scoped CSS to the AI-Kit Feature block’s inner container—primarily to override design tokens (--ai-kit, --mantine), but you can include other styles too.",
                 TEXT_DOMAIN,
               )}
             />
@@ -1093,7 +1046,6 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
         {fulfilledStore && mode ? (
           <App
             isPreview={true}
-            className={`wp-block-css-box-${uid}`}
             store={fulfilledStore}
             mode={previewMode || mode}
             editable={editable}
@@ -1117,7 +1069,7 @@ export const Edit: FunctionComponent<BlockEditProps<EditorBlockProps>> = (
             primaryShade={primaryShade}
             colors={colors}
             allowOverride={allowOverride}
-            innerCSS={innerCSS}
+            themeOverrides={themeOverrides}
           />
         ) : (
           <>
