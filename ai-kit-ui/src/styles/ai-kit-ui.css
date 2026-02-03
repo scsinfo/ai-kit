@@ -105,14 +105,7 @@
   --ai-kit-border-speed: 1400ms;
   --ai-kit-border-angle: 0deg;
 
-  --ai-kit-border-gradient: conic-gradient(
-    from var(--ai-kit-border-angle, 0deg) at 50% 50%,
-    #00c2ff,
-    #7c3aed,
-    #22c55e,
-    #f59e0b,
-    #00c2ff
-  );
+  --ai-kit-border-stops: #00c2ff, #7c3aed, #22c55e, #f59e0b, #00c2ff;
 
   --ai-kit-position-z-index: 100001;
 
@@ -306,7 +299,10 @@
   z-index: 0;
   border-radius: var(--ai-kit-radius);
   padding: var(--ai-kit-border-thickness);
-  background: var(--ai-kit-border-gradient);
+  background: conic-gradient(
+    from var(--ai-kit-border-angle, 0deg) at 50% 50%,
+    var(--ai-kit-border-stops)
+  );
   animation: ai-kit-border-run var(--ai-kit-border-speed) linear infinite;
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,

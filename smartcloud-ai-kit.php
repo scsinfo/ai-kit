@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       WPSuite AI-Kit – On-Device AI Tools
+ * Plugin Name:       SmartCloud AI-Kit – On-Device AI Tools
  * Plugin URI:        https://wpsuite.io/ai-kit/
  * Description:       Bring on-device, zero-cost AI directly into WordPress. Create, rewrite, translate, proofread, summarize, and SEO-optimize content using Chrome's built-in AI — no API keys, no cloud, no tokens, no data leaving the browser.
  * Requires at least: 6.2
@@ -11,9 +11,9 @@
  * Author URI:        https://smart-cloud-solutions.com
  * License:           MIT
  * License URI:       https://mit-license.org/
- * Text Domain:       wpsuite-ai-kit
+ * Text Domain:       smartcloud-ai-kit
  *
- * @package           wpsuite-ai-kit
+ * @package           smartcloud-ai-kit
  */
 
 namespace SmartCloud\WPSuite\AiKit;
@@ -27,8 +27,8 @@ if (!defined('ABSPATH')) {
 if (version_compare(PHP_VERSION, '8.1', '<')) {
     deactivate_plugins(plugin_basename(__FILE__));
     wp_die(
-        esc_html__('AI-Kit requires PHP 8.1 or higher.', 'wpsuite-ai-kit'),
-        esc_html__('Plugin dependency check', 'wpsuite-ai-kit'),
+        esc_html__('AI-Kit requires PHP 8.1 or higher.', 'smartcloud-ai-kit'),
+        esc_html__('Plugin dependency check', 'smartcloud-ai-kit'),
         array('back_link' => true)
     );
 }
@@ -73,7 +73,7 @@ final class AiKit
 
         // Register Gutenberg blocks (summarizer etc.)
         if (function_exists('register_block_type')) {
-            register_block_type(WPSUITE_AI_KIT_PATH . 'blocks/ai-feature');
+            register_block_type(SMARTCLOUD_AI_KIT_PATH . 'blocks/ai-feature');
         }
 
         // Assets
@@ -87,13 +87,13 @@ final class AiKit
         add_action('admin_menu', array($this, 'createAdminMenu'), 20);
 
         // Shortcodes
-        add_shortcode('wpsuite-ai-kit-feature', array($this, 'shortcodeFeature'));
+        add_shortcode('smartcloud-ai-kit-feature', array($this, 'shortcodeFeature'));
 
         // Category for custom blocks.
         add_filter('block_categories_all', array($this, 'registerBlockCategory'), 20, 2);
 
         add_filter('no_texturize_shortcodes', function ($shortcodes) {
-            $shortcodes[] = 'wpsuite-ai-kit-feature';
+            $shortcodes[] = 'smartcloud-ai-kit-feature';
             return $shortcodes;
         });
     }
@@ -102,12 +102,12 @@ final class AiKit
     {
         add_meta_box(
             'ai_kit_generate_metadata',
-            __('Generate SEO metadata', 'wpsuite-ai-kit'),
+            __('Generate SEO metadata', 'smartcloud-ai-kit'),
             function ($post) {
                 if (!($post instanceof \WP_Post) || $post->post_type !== 'attachment') {
                     return;
                 }
-                echo '<div id="wpsuite-ai-kit-attachment-metabox-root" data-attachment-id="' . esc_attr((string) $post->ID) . '"></div>';
+                echo '<div id="smartcloud-ai-kit-attachment-metabox-root" data-attachment-id="' . esc_attr((string) $post->ID) . '"></div>';
             },
             'attachment',
             'side',
@@ -117,13 +117,13 @@ final class AiKit
 
     public function registerMediaBulkActions($actions)
     {
-        $actions['wpsuite-ai-kit-preview-ai-metadata'] = __('Preview SEO metadata', 'wpsuite-ai-kit');
+        $actions['smartcloud-ai-kit-preview-ai-metadata'] = __('Preview SEO metadata', 'smartcloud-ai-kit');
         return $actions;
     }
 
     public function handleMediaBulkAction($redirect_to, $doaction, $post_ids)
     {
-        if ($doaction !== 'ai_kit_preview_ai_metadata') {
+        if ($doaction !== 'smartcloud-ai-kit-preview-ai-metadata') {
             return $redirect_to;
         }
 
@@ -166,9 +166,9 @@ final class AiKit
      */
     public function registerWidgets(): void
     {
-        if (file_exists(WPSUITE_AI_KIT_PATH . 'ai-kit-elementor-widgets.php')) {
+        if (file_exists(SMARTCLOUD_AI_KIT_PATH . 'ai-kit-elementor-widgets.php')) {
             add_action('elementor/init', static function () {
-                require_once WPSUITE_AI_KIT_PATH . 'ai-kit-elementor-widgets.php';
+                require_once SMARTCLOUD_AI_KIT_PATH . 'ai-kit-elementor-widgets.php';
             });
         }
     }
@@ -179,8 +179,8 @@ final class AiKit
     public function registerBlockCategory(array $categories, \WP_Block_Editor_Context $context): array
     {
         $categories[] = array(
-            'slug' => 'wpsuite-ai-kit',
-            'title' => __('WPSuite-AI Kit', 'wpsuite-ai-kit'),
+            'slug' => 'smartcloud-ai-kit',
+            'title' => __('SmartCloud - AI-Kit', 'smartcloud-ai-kit'),
             'icon' => null,
         );
         return $categories;
@@ -192,46 +192,46 @@ final class AiKit
     public function enqueueAssets(): void
     {
         wp_register_script(
-            'wpsuite-webcrypto-vendor',
-            WPSUITE_AI_KIT_URL . 'assets/js/wpsuite-webcrypto-vendor.min.js',
+            'smartcloud-wpsuite-webcrypto-vendor',
+            SMARTCLOUD_AI_KIT_URL . 'assets/js/webcrypto-vendor.min.js',
             array(),
             \SmartCloud\WPSuite\Hub\VERSION_WEBCRYPTO,
             false
         );
 
         wp_register_script(
-            'wpsuite-mantine-vendor',
-            WPSUITE_AI_KIT_URL . 'assets/js/wpsuite-mantine-vendor.min.js',
+            'smartcloud-wpsuite-mantine-vendor',
+            SMARTCLOUD_AI_KIT_URL . 'assets/js/mantine-vendor.min.js',
             array("react", "react-dom"),
             \SmartCloud\WPSuite\Hub\VERSION_MANTINE,
             false
         );
 
         $main_script_asset = array();
-        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'main/index.asset.php')) {
-            $main_script_asset = require(WPSUITE_AI_KIT_PATH . 'main/index.asset.php');
+        if (file_exists(filename: SMARTCLOUD_AI_KIT_PATH . 'main/index.asset.php')) {
+            $main_script_asset = require(SMARTCLOUD_AI_KIT_PATH . 'main/index.asset.php');
         }
-        $main_script_asset['dependencies'] = array_merge($main_script_asset['dependencies'], array('wpsuite-webcrypto-vendor', 'wpsuite-mantine-vendor'));
-        wp_enqueue_script('wpsuite-ai-kit-main-script', WPSUITE_AI_KIT_URL . 'main/index.js', $main_script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, false);
+        $main_script_asset['dependencies'] = array_merge($main_script_asset['dependencies'], array('smartcloud-wpsuite-webcrypto-vendor', 'smartcloud-wpsuite-mantine-vendor'));
+        wp_enqueue_script('smartcloud-ai-kit-main-script', SMARTCLOUD_AI_KIT_URL . 'main/index.js', $main_script_asset['dependencies'], SMARTCLOUD_AI_KIT_VERSION, false);
 
         $blocks_script_asset = array();
-        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'blocks/index.asset.php')) {
-            $blocks_script_asset = require(WPSUITE_AI_KIT_PATH . 'blocks/index.asset.php');
+        if (file_exists(filename: SMARTCLOUD_AI_KIT_PATH . 'blocks/index.asset.php')) {
+            $blocks_script_asset = require(SMARTCLOUD_AI_KIT_PATH . 'blocks/index.asset.php');
         }
-        $blocks_script_asset['dependencies'] = array_merge($blocks_script_asset['dependencies'], array('wpsuite-ai-kit-main-script', 'wpsuite-mantine-vendor'));
-        wp_enqueue_script('wpsuite-ai-kit-blocks-script', WPSUITE_AI_KIT_URL . 'blocks/index.js', $blocks_script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, false);
-        wp_enqueue_style('wpsuite-ai-kit-blocks-style', WPSUITE_AI_KIT_URL . 'blocks/index.css', array(), WPSUITE_AI_KIT_VERSION);
-        add_editor_style(WPSUITE_AI_KIT_URL . 'blocks/index.css');
+        $blocks_script_asset['dependencies'] = array_merge($blocks_script_asset['dependencies'], array('smartcloud-ai-kit-main-script'));
+        wp_enqueue_script('smartcloud-ai-kit-blocks-script', SMARTCLOUD_AI_KIT_URL . 'blocks/index.js', $blocks_script_asset['dependencies'], SMARTCLOUD_AI_KIT_VERSION, false);
+        wp_enqueue_style('smartcloud-ai-kit-blocks-style', SMARTCLOUD_AI_KIT_URL . 'blocks/index.css', array(), SMARTCLOUD_AI_KIT_VERSION);
+        add_editor_style(SMARTCLOUD_AI_KIT_URL . 'blocks/index.css');
 
         // Build data passed to JS.
         $settings = $this->admin->getSettings();
         $data = array(
-            'key' => WPSUITE_AI_KIT_SLUG,
-            'version' => WPSUITE_AI_KIT_VERSION,
+            'key' => SMARTCLOUD_AI_KIT_SLUG,
+            'version' => SMARTCLOUD_AI_KIT_VERSION,
             'status' => 'initializing',
             'plugin' => array(),
             'settings' => $settings,
-            'restUrl' => rest_url(WPSUITE_AI_KIT_SLUG . '/v1'),
+            'restUrl' => rest_url(SMARTCLOUD_AI_KIT_SLUG . '/v1'),
             'nonce' => wp_create_nonce('wp_rest'),
         );
         $js = 'const __aikitGlobal = (typeof globalThis !== "undefined") ? globalThis : window;
@@ -239,11 +239,11 @@ __aikitGlobal.WpSuite.plugins.aiKit = {};
 Object.assign(__aikitGlobal.WpSuite.plugins.aiKit, ' . wp_json_encode($data) . ');
 __aikitGlobal.WpSuite.constants = __aikitGlobal.WpSuite.constants ?? {};
 __aikitGlobal.WpSuite.constants.aiKit = {
-    mantineCssHref: "' . WPSUITE_AI_KIT_URL . 'assets/css/wpsuite-mantine-vendor.css",
-    aiKitUiCssHref: "' . WPSUITE_AI_KIT_URL . 'main/index.css"
+    mantineCssHref: "' . SMARTCLOUD_AI_KIT_URL . 'assets/css/mantine-vendor.css",
+    aiKitUiCssHref: "' . SMARTCLOUD_AI_KIT_URL . 'main/index.css"
 };
 ';
-        wp_add_inline_script('wpsuite-ai-kit-main-script', $js, 'before');
+        wp_add_inline_script('smartcloud-ai-kit-main-script', $js, 'before');
     }
 
     public function enqueueAdminAssets($hook): void
@@ -260,11 +260,11 @@ __aikitGlobal.WpSuite.constants.aiKit = {
         }
 
         $script_asset = array();
-        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/media.asset.php')) {
-            $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/media.asset.php');
+        if (file_exists(filename: SMARTCLOUD_AI_KIT_PATH . 'admin/media.asset.php')) {
+            $script_asset = require_once(SMARTCLOUD_AI_KIT_PATH . 'admin/media.asset.php');
         }
-        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-ai-kit-main-script'));
-        wp_enqueue_script('wpsuite-ai-kit-media-script', WPSUITE_AI_KIT_URL . 'admin/media.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
+        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('smartcloud-ai-kit-main-script'));
+        wp_enqueue_script('smartcloud-ai-kit-media-script', SMARTCLOUD_AI_KIT_URL . 'admin/media.js', $script_asset['dependencies'], SMARTCLOUD_AI_KIT_VERSION, true);
     }
 
     /**
@@ -273,36 +273,35 @@ __aikitGlobal.WpSuite.constants.aiKit = {
     public function enqueueEditorAssets(): void
     {
         $script_asset = array();
-        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/media.asset.php')) {
-            $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/media.asset.php');
+        if (file_exists(filename: SMARTCLOUD_AI_KIT_PATH . 'admin/media.asset.php')) {
+            $script_asset = require_once(SMARTCLOUD_AI_KIT_PATH . 'admin/media.asset.php');
         }
-        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-ai-kit-main-script'));
-        wp_enqueue_script('wpsuite-ai-kit-media-script', WPSUITE_AI_KIT_URL . 'admin/media.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
+        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('smartcloud-ai-kit-main-script'));
+        wp_enqueue_script('smartcloud-ai-kit-media-script', SMARTCLOUD_AI_KIT_URL . 'admin/media.js', $script_asset['dependencies'], SMARTCLOUD_AI_KIT_VERSION, true);
+        $script_asset = array();
+        if (file_exists(filename: SMARTCLOUD_AI_KIT_PATH . 'admin/sidebar.asset.php')) {
+            $script_asset = require_once(SMARTCLOUD_AI_KIT_PATH . 'admin/sidebar.asset.php');
+        }
+        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('smartcloud-ai-kit-main-script'));
+        wp_enqueue_script('smartcloud-ai-kit-sidebar-script', SMARTCLOUD_AI_KIT_URL . 'admin/sidebar.js', $script_asset['dependencies'], SMARTCLOUD_AI_KIT_VERSION, true);
 
         $script_asset = array();
-        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/sidebar.asset.php')) {
-            $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/sidebar.asset.php');
+        if (file_exists(filename: SMARTCLOUD_AI_KIT_PATH . 'admin/langutils.asset.php')) {
+            $script_asset = require_once(SMARTCLOUD_AI_KIT_PATH . 'admin/langutils.asset.php');
         }
-        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-webcrypto-vendor'));
-        wp_enqueue_script('wpsuite-ai-kit-sidebar-script', WPSUITE_AI_KIT_URL . 'admin/sidebar.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
+        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('smartcloud-ai-kit-main-script'));
+        wp_enqueue_script('smartcloud-ai-kit-langutils-script', SMARTCLOUD_AI_KIT_URL . 'admin/langutils.js', $script_asset['dependencies'], SMARTCLOUD_AI_KIT_VERSION, true);
 
         $script_asset = array();
-        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/langutils.asset.php')) {
-            $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/langutils.asset.php');
+        if (file_exists(filename: SMARTCLOUD_AI_KIT_PATH . 'admin/imgextra.asset.php')) {
+            $script_asset = require_once(SMARTCLOUD_AI_KIT_PATH . 'admin/imgextra.asset.php');
         }
-        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-webcrypto-vendor'));
-        wp_enqueue_script('wpsuite-ai-kit-langutils-script', WPSUITE_AI_KIT_URL . 'admin/langutils.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
-
-        $script_asset = array();
-        if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/imgextra.asset.php')) {
-            $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/imgextra.asset.php');
-        }
-        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-webcrypto-vendor'));
-        wp_enqueue_script('wpsuite-ai-kit-imgextra-script', WPSUITE_AI_KIT_URL . 'admin/imgextra.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
+        $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('smartcloud-ai-kit-main-script'));
+        wp_enqueue_script('smartcloud-ai-kit-imgextra-script', SMARTCLOUD_AI_KIT_URL . 'admin/imgextra.js', $script_asset['dependencies'], SMARTCLOUD_AI_KIT_VERSION, true);
     }
 
     /**
-     * Shortcode handler for [wpsuite-ai-kit-feature]
+     * Shortcode handler for [smartcloud-ai-kit-feature]
      */
     public function shortcodeFeature($atts = array(), $content = null): string
     {
@@ -423,11 +422,11 @@ __aikitGlobal.WpSuite.constants.aiKit = {
         }
 
         $newBlock = [
-            'blockName' => 'ai-kit/feature',
+            'blockName' => 'smartcloud-ai-kit/feature',
             'attrs' => $attrs,
         ];
         $content = render_block($newBlock);
-        $content = str_replace("ai-kit-is-preview", ($is_preview ? 'true' : 'false'), $content);
+        $content = str_replace("smartcloud-ai-kit-is-preview", ($is_preview ? 'true' : 'false'), $content);
         return $content;
     }
 
@@ -441,11 +440,10 @@ __aikitGlobal.WpSuite.constants.aiKit = {
 
     private function defineConstants(): void
     {
-        define('WPSUITE_AI_KIT_VERSION', VERSION);
-        define('WPSUITE_AI_KIT_SLUG', 'wpsuite-ai-kit');
-
-        define('WPSUITE_AI_KIT_PATH', plugin_dir_path(__FILE__));
-        define('WPSUITE_AI_KIT_URL', plugin_dir_url(__FILE__));
+        define('SMARTCLOUD_AI_KIT_VERSION', VERSION);
+        define('SMARTCLOUD_AI_KIT_SLUG', 'smartcloud-ai-kit');
+        define('SMARTCLOUD_AI_KIT_PATH', plugin_dir_path(__FILE__));
+        define('SMARTCLOUD_AI_KIT_URL', plugin_dir_url(__FILE__));
     }
 
     /**
@@ -454,13 +452,13 @@ __aikitGlobal.WpSuite.constants.aiKit = {
     private function includes(): void
     {
         // Hub admin classes.
-        if (file_exists(WPSUITE_AI_KIT_PATH . 'hub-loader.php')) {
-            require_once WPSUITE_AI_KIT_PATH . 'hub-loader.php';
+        if (file_exists(SMARTCLOUD_AI_KIT_PATH . 'hub-loader.php')) {
+            require_once SMARTCLOUD_AI_KIT_PATH . 'hub-loader.php';
         }
 
         // Admin classes.
-        if (file_exists(WPSUITE_AI_KIT_PATH . 'admin/index.php')) {
-            require_once WPSUITE_AI_KIT_PATH . 'admin/index.php';
+        if (file_exists(SMARTCLOUD_AI_KIT_PATH . 'admin/index.php')) {
+            require_once SMARTCLOUD_AI_KIT_PATH . 'admin/index.php';
         }
         if (class_exists('\SmartCloud\WPSuite\AiKit\Admin')) {
             $this->admin = new \SmartCloud\WPSuite\AiKit\Admin();
@@ -500,10 +498,10 @@ __aikitGlobal.WpSuite.constants.aiKit = {
 }
 
 // Bootstrap plugin.
-if (defined('WPSUITE_AI_KIT_BOOTSTRAPPED')) {
+if (defined('SMARTCLOUD_AI_KIT_BOOTSTRAPPED')) {
     return;
 }
-define('WPSUITE_AI_KIT_BOOTSTRAPPED', true);
+define('SMARTCLOUD_AI_KIT_BOOTSTRAPPED', true);
 
 add_action('init', 'SmartCloud\WPSuite\AiKit\aikitInit', 15);
 add_action('plugins_loaded', 'SmartCloud\WPSuite\AiKit\aikitLoaded', 20);
@@ -542,5 +540,5 @@ function aikit()
  */
 function loader()
 {
-    return \SmartCloud\WPSuite\Hub\AiKitHubLoader::instance('wpsuite-ai-kit/wpsuite-ai-kit.php', 'wpsuite-ai-kit');
+    return \SmartCloud\WPSuite\Hub\AiKitHubLoader::instance('smartcloud-ai-kit/smartcloud-ai-kit.php', 'smartcloud-ai-kit');
 }

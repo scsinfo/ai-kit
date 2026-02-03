@@ -98,7 +98,6 @@ async function renderFeature(args: AiFeatureArgs): Promise<AiWorkerHandle> {
     document.body;
 
   const container = document.createElement("div");
-  container.setAttribute("data-wpsuite-ai-feature", "1");
   host.appendChild(container);
 
   let root: Root | null = createRoot(container);
@@ -173,7 +172,6 @@ async function renderChatbot(args: AiWorkerProps): Promise<AiWorkerHandle> {
   const host = document.body;
 
   const container = document.createElement("div");
-  container.setAttribute("data-wpsuite-ai-chatbot", "1");
   container.style.zIndex = "2147483647"; // max z-index
   host.appendChild(container);
 
@@ -219,13 +217,13 @@ onDomReady(async () => {
   if (
     aiKit.settings?.reCaptchaSiteKey &&
     !document.querySelector(
-      `[wpsuite-recaptcha-provider='${aiKit.settings.reCaptchaSiteKey}']`,
+      `[smartcloud-wpsuite-recaptcha-provider='${aiKit.settings.reCaptchaSiteKey}']`,
     )
   ) {
     const el = document.createElement("div");
-    el.id = "ai-kit-recaptcha-provider";
+    el.id = "smartcloud-ai-kit-recaptcha-provider";
     el.setAttribute(
-      "wpsuite-recaptcha-provider",
+      "smartcloud-wpsuite-recaptcha-provider",
       aiKit.settings.reCaptchaSiteKey,
     );
     document.body.appendChild(el);

@@ -153,7 +153,7 @@ const SettingsTitle = () => {
           }}
         >
           {__(
-            isMobile ? "AI-Kit" : "AI-Kit — AI tools for WordPress",
+            isMobile ? "AI-Kit" : "AI-Kit — On-Device AI Tools for WordPress",
             TEXT_DOMAIN,
           )}
         </Heading>
@@ -171,10 +171,10 @@ const SettingsTitle = () => {
         {!wpSuiteSiteSettings.siteId && (
           <>
             <Text c="dimmed" size="xs">
-              To use Pro features, please connect this WordPress instance to a{" "}
-              <strong>WPSuite.io</strong> site. Go to the{" "}
+              To use Pro features, please connect this WordPress site to a{" "}
+              <strong>WPSuite</strong> workspace. Go to the{" "}
               <a href="?page=hub-for-wpsuiteio">
-                <strong>WPSuite.io → Connect your Site</strong>
+                <strong>SmartCloud → Connect your Site to WPSuite</strong>
               </a>{" "}
               menu and complete the linking process.
             </Text>

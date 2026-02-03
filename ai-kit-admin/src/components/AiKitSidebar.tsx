@@ -302,11 +302,11 @@ const SidebarInner = () => {
 
 export const AiKitSidebar = () => (
   <Fragment>
-    <PluginSidebarMoreMenuItem target="wpsuite-ai-kit-sidebar">
+    <PluginSidebarMoreMenuItem target="smartcloud-ai-kit-sidebar">
       {__("AI-Kit Sidebar", TEXT_DOMAIN)}
     </PluginSidebarMoreMenuItem>
     <PluginSidebar
-      name="wpsuite-ai-kit-sidebar"
+      name="smartcloud-ai-kit-sidebar"
       title={__("AI-Kit Sidebar", TEXT_DOMAIN)}
       icon={
         <AiKitFeatureIcon
@@ -319,4 +319,4 @@ export const AiKitSidebar = () => (
   </Fragment>
 );
 
-registerPlugin("wpsuite-ai-kit-sidebar", { render: AiKitSidebar });
+registerPlugin("smartcloud-ai-kit-sidebar", { render: AiKitSidebar });

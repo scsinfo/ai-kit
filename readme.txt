@@ -1,4 +1,4 @@
-=== WPSuite AI-Kit – On-Device AI Tools ===
+=== SmartCloud AI-Kit – On-Device AI Tools ===
 Contributors: smartcloud
 Tags: ai, chrome, seo, language, tools
 Requires at least: 6.2
@@ -7,13 +7,15 @@ Requires PHP: 8.1
 Stable tag: 1.0.0
 License: MIT
 License URI: https://mit-license.org/
-Text Domain: wpsuite-ai-kit
+Text Domain: smartcloud-ai-kit
 
 Add private, on-device AI to WordPress (write, translate, rewrite, proofread, summarize). Free runs locally; Pro connects to your own AWS backend.
 
 == Description ==
 
 AI-Kit brings practical AI helpers to WordPress while keeping privacy first.
+
+WPSuite is a commercial platform by Smart Cloud Solutions, Inc., providing optional shared services for SmartCloud WordPress plugins.
 
 **Free (local-only) mode**
 AI-Kit uses Chrome’s built-in on-device AI capabilities (when available). In this mode, content is processed locally in the browser.
@@ -64,7 +66,7 @@ When backend is used, requests go to an API endpoint you configure — typically
 
 1. Upload the plugin ZIP (or install via the WordPress plugin repository).
 2. Activate the plugin through the “Plugins” screen in WordPress.
-3. Go to **WP Admin → WPSuite.io → AI-Kit Settings** and review the defaults.
+3. Go to **WP Admin → SmartCloud → AI-Kit Settings** and review the defaults.
 4. Open:
    - **Media → Library** (for image metadata generation), or
    - the **Gutenberg editor** (for the editor tools and blocks).
@@ -143,11 +145,11 @@ This plugin may integrate with the following external services, depending on con
    - **How it’s called:**
      Standard HTTPS requests (fetch) from the browser.
 
-3. **WPSuite.io Hub (optional; site/workspace linking & shared WP Suite features)**
+3. **WPSuite platform connection (optional; site/workspace linking & shared features)**
    - **When it applies:**
-     When you use **WP Admin → WPSuite.io → Connect your Site** (the “Hub”) to sign in and connect this WordPress site to a WPSuite.io workspace, or to switch/disconnect later.
+     When you use **WP Admin → SmartCloud → Connect your Site to WPSuite** to link this WordPress site to a WPSuite workspace, or to switch/disconnect later.
    - **What it’s used for:**
-     Enabling shared WP Suite functionality across plugins, and (where applicable) validating subscription/licensing status to unlock Pro features.
+     Storing and retrieving Pro feature configuration (e.g., API/chatbot/feature settings) and enabling an admin-side preview experience so you can try Pro features in WP Admin before enabling them on the live site.
    - **What data may be sent:**
      Minimal account/session data required for authentication, and minimal site/workspace linking data required to associate a WordPress site with a workspace (e.g., site/workspace identifiers and the site’s URL/domain).
    - **Where it goes / how it’s called:**

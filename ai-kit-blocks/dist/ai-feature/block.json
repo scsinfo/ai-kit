@@ -1,11 +1,11 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "ai-kit/feature",
+  "name": "smartcloud-ai-kit/feature",
   "version": "1.0.0",
   "title": "AI-Kit Feature (PRO)",
-  "category": "wpsuite-ai-kit",
-  "description": "AI-Kit Feature",
+  "category": "smartcloud-ai-kit",
+  "description": "AI-Kit Feature - add AI-powered features to your site",
   "attributes": {
     "mode": {
       "type": "string"

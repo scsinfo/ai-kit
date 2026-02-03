@@ -57,7 +57,7 @@ const CONTENT_ATTR_BY_BLOCK: Record<string, string> = {
   "core/button": "text",
 };
 
-const NOTICE_ID = "wpsuite-ai-kit-capability-unavailable";
+const NOTICE_ID = "smartcloud-ai-kit-capability-unavailable";
 
 function isTargetBlock(name: string): boolean {
   return TARGET_BLOCKS.has(name);

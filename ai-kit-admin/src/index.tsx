@@ -68,7 +68,7 @@ if (!aiKit) {
 }
 getStore().then(async (store) => {
   const view = aiKit?.view ?? "settings";
-  const root = createRoot(document.getElementById("wpsuite-ai-kit-admin")!);
+  const root = createRoot(document.getElementById("smartcloud-ai-kit-admin")!);
   if (view === "diagnostics") {
     root.render(
       <StrictMode>

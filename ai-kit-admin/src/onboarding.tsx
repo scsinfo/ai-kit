@@ -201,7 +201,7 @@ export const AiKitOnboarding = (props: AiKitOnboardingProps) => {
         ]),
       shortcode:
         shots.shortcode ??
-        mk(["[ai-kit-feature] shortcode embedded in a page"]),
+        mk(["[smartcloud-ai-kit-feature] shortcode embedded in a page"]),
       api:
         shots.api ??
         mk([
@@ -476,7 +476,7 @@ export const AiKitOnboarding = (props: AiKitOnboardingProps) => {
             <Accordion.Control>
               <Group gap="xs">
                 <Text fw={700}>
-                  {__("Shortcode: [ai-kit-feature]", TEXT_DOMAIN)}
+                  {__("Shortcode: [smartcloud-ai-kit-feature]", TEXT_DOMAIN)}
                 </Text>
                 <Badge color="violet" variant="light">
                   {__("PRO", TEXT_DOMAIN)}
@@ -493,7 +493,7 @@ export const AiKitOnboarding = (props: AiKitOnboardingProps) => {
                   )}
                 </Text>
                 <Text size="sm" c="dimmed">
-                  <code>[ai-kit-feature]</code>
+                  <code>[smartcloud-ai-kit-feature]</code>
                 </Text>
                 <ul className={classes.bullets}>
                   <li>

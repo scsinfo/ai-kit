@@ -446,7 +446,7 @@ declare function getAiKitPlugin(): AiKitPlugin;
 declare function waitForAiKitReady(timeoutMs?: number): Promise<void>;
 declare function getStore(timeoutMs?: number): Promise<Store>;
 
-declare const TEXT_DOMAIN = "wpsuite-ai-kit";
+declare const TEXT_DOMAIN = "smartcloud-ai-kit";
 
 declare const AiKitFeatureIcon: React.FC<React.SVGProps<SVGSVGElement>>;
 declare const AiKitChatbotIcon: React.FC<React.SVGProps<SVGSVGElement>>;

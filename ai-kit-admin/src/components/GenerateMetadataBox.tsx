@@ -204,7 +204,7 @@ export default function GenerateMetadataBox(props: GenerateMetadataBoxProps) {
 
   return (
     <div
-      className="wpsuite-ai-kit-generate-metadata-box"
+      className="smartcloud-ai-kit-generate-metadata-box"
       style={{ display: "grid", gap: 8 }}
     >
       {!canRun ? (

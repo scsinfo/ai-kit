@@ -14,8 +14,8 @@ use WP_Error;
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
-if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/model.php')) {
-    require_once WPSUITE_AI_KIT_PATH . 'admin/model.php';
+if (file_exists(filename: SMARTCLOUD_AI_KIT_PATH . 'admin/model.php')) {
+    require_once SMARTCLOUD_AI_KIT_PATH . 'admin/model.php';
 }
 class Admin
 {
@@ -32,7 +32,7 @@ class Admin
         );
 
         // WP can return array/object depending on previous versions / serialization.
-        $raw = get_option(WPSUITE_AI_KIT_SLUG, $defaultSettings);
+        $raw = get_option(SMARTCLOUD_AI_KIT_SLUG, $defaultSettings);
         $this->settings = AiKitSettings::fromMixed($raw);
         $this->registerRestRoutes();
     }
@@ -44,20 +44,20 @@ class Admin
     public function addMenu()
     {
         $settings_page = add_submenu_page(
-            WPSUITE_SLUG,
-            __('AI-Kit Settings', 'wpsuite-ai-kit'),
-            __('AI-Kit Settings', 'wpsuite-ai-kit'),
+            SMARTCLOUD_WPSUITE_SLUG,
+            __('AI-Kit Settings', 'smartcloud-ai-kit'),
+            __('AI-Kit Settings', 'smartcloud-ai-kit'),
             'manage_options',
-            WPSUITE_AI_KIT_SLUG,
+            SMARTCLOUD_AI_KIT_SLUG,
             array($this, 'renderAiKitSettingsPage'),
         );
 
         $diagnostics_page = add_submenu_page(
-            WPSUITE_SLUG,
-            __('AI-Kit Diagnostics', 'wpsuite-ai-kit'),
-            __('AI-Kit Diagnostics', 'wpsuite-ai-kit'),
+            SMARTCLOUD_WPSUITE_SLUG,
+            __('AI-Kit Diagnostics', 'smartcloud-ai-kit'),
+            __('AI-Kit Diagnostics', 'smartcloud-ai-kit'),
             'manage_options',
-            WPSUITE_AI_KIT_SLUG . '-diagnostics',
+            SMARTCLOUD_AI_KIT_SLUG . '-diagnostics',
             array($this, 'renderAiKitSettingsPage'),
         );
 
@@ -67,14 +67,14 @@ class Admin
             }
 
             $script_asset = array();
-            if (file_exists(filename: WPSUITE_AI_KIT_PATH . 'admin/index.asset.php')) {
-                $script_asset = require_once(WPSUITE_AI_KIT_PATH . 'admin/index.asset.php');
+            if (file_exists(filename: SMARTCLOUD_AI_KIT_PATH . 'admin/index.asset.php')) {
+                $script_asset = require_once(SMARTCLOUD_AI_KIT_PATH . 'admin/index.asset.php');
             }
-            $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('wpsuite-webcrypto-vendor', 'wpsuite-mantine-vendor'));
-            $res = wp_enqueue_script('wpsuite-ai-kit-admin-script', WPSUITE_AI_KIT_URL . 'admin/index.js', $script_asset['dependencies'], WPSUITE_AI_KIT_VERSION, true);
+            $script_asset['dependencies'] = array_merge($script_asset['dependencies'], array('smartcloud-wpsuite-webcrypto-vendor', 'smartcloud-wpsuite-mantine-vendor'));
+            $res = wp_enqueue_script('smartcloud-ai-kit-admin-script', SMARTCLOUD_AI_KIT_URL . 'admin/index.js', $script_asset['dependencies'], SMARTCLOUD_AI_KIT_VERSION, true);
             // Make the blocks translatable.
             if (function_exists('wp_set_script_translations')) {
-                wp_set_script_translations('wpsuite-ai-kit-admin-script', 'wpsuite-ai-kit', WPSUITE_AI_KIT_PATH . 'languages');
+                wp_set_script_translations('smartcloud-ai-kit-admin-script', 'smartcloud-ai-kit', SMARTCLOUD_AI_KIT_PATH . 'languages');
             }
 
             if ($hook === $settings_page) {
@@ -85,39 +85,29 @@ class Admin
                 $page = '';
             }
             $js = '__aikitGlobal.WpSuite.plugins.aiKit.view = ' . wp_json_encode($page) . ';';
-            wp_add_inline_script('wpsuite-ai-kit-admin-script', $js, 'before');
+            wp_add_inline_script('smartcloud-ai-kit-admin-script', $js, 'before');
 
-            wp_enqueue_style('wpsuite-ai-kit-admin-style', WPSUITE_AI_KIT_URL . 'admin/index.css', array(), WPSUITE_AI_KIT_VERSION);
-            wp_enqueue_style('wpsuite-mantine-vendor-style', GATEY_URL . 'assets/css/wpsuite-mantine-vendor.css', array(), \SmartCloud\WPSuite\Hub\VERSION_MANTINE);
+            wp_enqueue_style('smartcloud-ai-kit-admin-style', SMARTCLOUD_AI_KIT_URL . 'admin/index.css', array(), SMARTCLOUD_AI_KIT_VERSION);
+            wp_enqueue_style('smartcloud-mantine-vendor-style', SMARTCLOUD_AI_KIT_URL . 'assets/css/mantine-vendor.css', array(), \SmartCloud\WPSuite\Hub\VERSION_MANTINE);
         });
-
-        add_filter('parent_file', array($this, 'highlightMenu'));
-    }
-
-    public function highlightMenu($parent_file)
-    {
-        if (get_query_var('post_type') == 'wp_block' && get_query_var('s') == 'wpsuite-ai-kit') {
-            return WPSUITE_SLUG;
-        }
-        return $parent_file;
     }
 
     public function renderAiKitSettingsPage()
     {
-        echo '<div id="wpsuite-ai-kit-admin"></div>';
+        echo '<div id="smartcloud-ai-kit-admin"></div>';
     }
 
     public function initRestApi()
     {
         register_rest_route(
-            WPSUITE_AI_KIT_SLUG . '/v1',
+            SMARTCLOUD_AI_KIT_SLUG . '/v1',
             '/update-settings',
             array(
                 'methods' => 'POST',
                 'callback' => array($this, 'updateSettings'),
                 'permission_callback' => function () {
                     if (!current_user_can('manage_options')) {
-                        return new WP_Error('rest_forbidden', esc_html__('Forbidden', 'wpsuite-ai-kit'), array('status' => 403));
+                        return new WP_Error('rest_forbidden', esc_html__('Forbidden', 'smartcloud-ai-kit'), array('status' => 403));
                     }
                     return true;
                 },
@@ -154,8 +144,8 @@ class Admin
         );
 
         // Frissített beállítások mentése
-        update_option(WPSUITE_AI_KIT_SLUG, $this->settings);
-        return new WP_REST_Response(array('success' => true, 'message' => __('Settings updated successfully.', 'wpsuite-ai-kit')), 200);
+        update_option(SMARTCLOUD_AI_KIT_SLUG, $this->settings);
+        return new WP_REST_Response(array('success' => true, 'message' => __('Settings updated successfully.', 'smartcloud-ai-kit')), 200);
     }
 
     private function registerRestRoutes()

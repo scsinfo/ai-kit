@@ -1,6 +1,12 @@
 import createCache from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
-import { SetStateAction, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  SetStateAction,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 
 export type ShadowBoundaryMode = "local" | "overlay";
@@ -63,16 +69,11 @@ function ensureStylesheets(
 
 const REGISTRY_ID = "ai-kit-property-registry";
 
-function installAiKitPropertyRegistry() {
-  const doc = getTopDocumentSafe();
-
-  // simple dedupe
+function installAiKitPropertyRegistry(doc: Document) {
   if (doc.getElementById(REGISTRY_ID)) return;
 
   const style = doc.createElement("style");
   style.id = REGISTRY_ID;
-
-  // ONLY @property registrations (no global resets!)
   style.textContent = `
 @property --ai-kit-border-angle {
   syntax: "<angle>";
@@ -80,8 +81,7 @@ function installAiKitPropertyRegistry() {
   initial-value: 0deg;
 }
 `;
-
-  doc.head.appendChild(style);
+  (doc.head ?? doc.documentElement).appendChild(style);
 }
 
 export function ShadowBoundary({
@@ -175,7 +175,7 @@ export function ShadowBoundary({
     const onMq = () => applyScheme();
     mq?.addEventListener?.("change", onMq);
 
-    installAiKitPropertyRegistry();
+    installAiKitPropertyRegistry(doc);
 
     // 5) Inject styles into shadow body (dedup per shadow root)
     ensureStylesheets(
@@ -214,11 +214,11 @@ export function ShadowBoundary({
     >
       {portalTarget && shadowRoot && emotionCache
         ? createPortal(
-          <CacheProvider value={emotionCache}>
-            {children({ rootElement: portalTarget, shadowRoot })}
-          </CacheProvider>,
-          portalTarget,
-        )
+            <CacheProvider value={emotionCache}>
+              {children({ rootElement: portalTarget, shadowRoot })}
+            </CacheProvider>,
+            portalTarget,
+          )
         : null}
     </div>
   );

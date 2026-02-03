@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
-const WPSUITE_AI_KIT_HUB_VERSION = '2.0.5';
+const SMARTCLOUD_WPSUITE_AI_KIT_HUB_VERSION = '2.1.0';
 
 final class AiKitHubLoader
 {
@@ -55,34 +55,23 @@ final class AiKitHubLoader
         }
         $icon_url = $this->admin->getIconUrl();
         add_menu_page(
-            __('WPSuite.io', 'wpsuite-ai-kit'),
-            __('WPSuite.io', 'wpsuite-ai-kit'),
+            __('SmartCloud', 'smartcloud-ai-kit'),
+            __('SmartCloud', 'smartcloud-ai-kit'),
             'manage_options',
-            WPSUITE_SLUG,
+            SMARTCLOUD_WPSUITE_SLUG,
             null,
             $icon_url,
             58,
         );
 
         $connect_suffix = add_submenu_page(
-            WPSUITE_SLUG,
-            __('Connect your Site', 'wpsuite-ai-kit'),
-            __('Connect your Site', 'wpsuite-ai-kit'),
+            SMARTCLOUD_WPSUITE_SLUG,
+            __('Connect your Site to WPSuite', 'smartcloud-ai-kit'),
+            __('Connect your Site to WPSuite', 'smartcloud-ai-kit'),
             'manage_options',
-            WPSUITE_SLUG,
+            SMARTCLOUD_WPSUITE_SLUG,
             array($this->admin, 'renderAdminPage'),
         );
-
-        /*
-        $diagnostics_suffix = add_submenu_page(
-            WPSUITE_SLUG,
-            __('Diagnostics', 'wpsuite-ai-kit'),
-            __('Diagnostics', 'wpsuite-ai-kit'),
-            'manage_options',
-            WPSUITE_SLUG . '-diagnostics',
-            array($this->admin, 'renderAdminPage'),
-        );
-        */
 
         $this->admin->enqueueAdminScripts($connect_suffix /*, $diagnostics_suffix */);
     }
@@ -104,17 +93,17 @@ final class AiKitHubLoader
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
         }
 
-        if (!empty($GLOBALS['wpsuitehub_menu_parent'])) {
+        if (!empty($GLOBALS['smartcloud_wpsuite_menu_parent'])) {
             return false;
         }
 
         // If Hub is not present, try to create a single common top-level menu
         // Mutex: first writer wins on the option
-        if (!defined('WPSUITE_SLUG')) {
-            define('WPSUITE_SLUG', 'hub-for-wpsuiteio');
+        if (!defined('SMARTCLOUD_WPSUITE_SLUG')) {
+            define('SMARTCLOUD_WPSUITE_SLUG', 'hub-for-wpsuiteio');
         }
-        $fallback_parent = WPSUITE_SLUG; // common top-level slug
-        $owner_option = WPSUITE_SLUG . '/top-menu-owner';
+        $fallback_parent = SMARTCLOUD_WPSUITE_SLUG; // common top-level slug
+        $owner_option = SMARTCLOUD_WPSUITE_SLUG . '/top-menu-owner';
 
         $owner = get_option($owner_option); // may be string or false/null
         $owner_version = get_option($owner_option . '/version') ?? "1.0.0";
@@ -126,36 +115,36 @@ final class AiKitHubLoader
         $owner_is_valid = in_array(WP_PLUGIN_DIR . '/' . $owner, wp_get_active_and_valid_plugins(), true);
         $owner_inactive = !$owner_is_active || !$owner_is_valid || !$owner_exists;
 
-        $owner_version_is_smaller = version_compare($owner_version, WPSUITE_AI_KIT_HUB_VERSION) === -1;
-        $owner_version_equals = version_compare($owner_version, WPSUITE_AI_KIT_HUB_VERSION) === 0;
+        $owner_version_is_smaller = version_compare($owner_version, SMARTCLOUD_WPSUITE_AI_KIT_HUB_VERSION) === -1;
+        $owner_version_equals = version_compare($owner_version, SMARTCLOUD_WPSUITE_AI_KIT_HUB_VERSION) === 0;
 
         // If there is no owner yet, try to claim it
         if ($owner_missing || $owner_is_me || $owner_inactive || $owner_version_is_smaller) {
             $result = false;
             // add_option atomic: only one can win in case of multiple concurrent requests
-            if (empty($GLOBALS['wpsuite_fallback_parent_added'])) {
-                $GLOBALS['wpsuite_fallback_parent_added'] = true;
+            if (empty($GLOBALS['smartcloud_wpsuite_fallback_parent_added'])) {
+                $GLOBALS['smartcloud_wpsuite_fallback_parent_added'] = true;
                 $result = true;
 
-                define('WPSUITE_VERSION', WPSUITE_AI_KIT_HUB_VERSION);
-                define('WPSUITE_PATH', plugin_dir_path(__FILE__) . WPSUITE_SLUG . '/');
-                define('WPSUITE_URL', plugin_dir_url(__FILE__) . WPSUITE_SLUG . '/');
-                define('WPSUITE_READY_HOOK', WPSUITE_SLUG . '/ready');
+                define('SMARTCLOUD_WPSUITE_VERSION', SMARTCLOUD_WPSUITE_AI_KIT_HUB_VERSION);
+                define('SMARTCLOUD_WPSUITE_PATH', plugin_dir_path(__FILE__) . SMARTCLOUD_WPSUITE_SLUG . '/');
+                define('SMARTCLOUD_WPSUITE_URL', plugin_dir_url(__FILE__) . SMARTCLOUD_WPSUITE_SLUG . '/');
+                define('SMARTCLOUD_WPSUITE_READY_HOOK', SMARTCLOUD_WPSUITE_SLUG . '/ready');
 
-                if (file_exists(WPSUITE_PATH . 'index.php')) {
-                    require_once WPSUITE_PATH . 'index.php';
+                if (file_exists(SMARTCLOUD_WPSUITE_PATH . 'index.php')) {
+                    require_once SMARTCLOUD_WPSUITE_PATH . 'index.php';
                 }
                 if (class_exists('\SmartCloud\WPSuite\Hub\HubAdmin')) {
                     $this->admin = new HubAdmin();
                 }
                 if (!$owner_is_me || !$owner_version_equals) {
                     update_option($owner_option, $this->plugin, false);
-                    update_option($owner_option . '/version', WPSUITE_AI_KIT_HUB_VERSION, false);
+                    update_option($owner_option . '/version', SMARTCLOUD_WPSUITE_AI_KIT_HUB_VERSION, false);
                 }
             }
             if (!$owner_is_me && $owner_version_is_smaller) {
                 update_option($owner_option, $this->plugin, false);
-                update_option($owner_option . '/version', WPSUITE_AI_KIT_HUB_VERSION, false);
+                update_option($owner_option . '/version', SMARTCLOUD_WPSUITE_AI_KIT_HUB_VERSION, false);
             }
             return $result;
         }

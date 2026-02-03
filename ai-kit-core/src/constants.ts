@@ -1,1 +1,1 @@
-export const TEXT_DOMAIN = "wpsuite-ai-kit";
+export const TEXT_DOMAIN = "smartcloud-ai-kit";

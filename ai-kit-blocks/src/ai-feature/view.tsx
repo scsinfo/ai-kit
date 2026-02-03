@@ -382,9 +382,9 @@ try {
     }
   };
 
-  jQuery(document).on("wpsuite-ai-kit-feature-block", (_, id) => call(id));
+  jQuery(document).on("smartcloud-ai-kit-feature-block", (_, id) => call(id));
   jQuery(window).on("elementor/frontend/init", function () {
-    jQuery(document).on("wpsuite-ai-kit-feature-block", (_, id) => call(id));
+    jQuery(document).on("smartcloud-ai-kit-feature-block", (_, id) => call(id));
   });
 } catch (err) {
   console.error(err);

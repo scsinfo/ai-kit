@@ -126,7 +126,7 @@ Suggested structure:
 
 ```
 /projects/
-  hub-for-wpsuiteio/
+  wpsuite/
     wpsuite-core/
     wpsuite-admin/
   ai-kit/
@@ -141,7 +141,7 @@ Suggested structure:
 
 ```bash
 # Hub repo
-cd hub-for-wpsuiteio/wpsuite-core
+cd wpsuite/wpsuite-core
 yarn install
 
 cd ../wpsuite-admin
@@ -181,7 +181,7 @@ Useful if you actively modify `wpsuite-core`, `ai-kit-core`, or `ai-kit-ui`.
 Build/link `wpsuite-core` from the Hub repo:
 
 ```bash
-cd ../hub-for-wpsuiteio/wpsuite-core
+cd ../wpsuite/wpsuite-core
 yarn run build
 npm link
 ```
@@ -244,7 +244,7 @@ Ensure the built assets are copied into the simplified plugin layout:
 - `ai-kit-main/dist/*` → `main/`
 - `ai-kit-blocks/dist/*` → `blocks/`
 - `ai-kit-admin/php/*` and `ai-kit-admin/dist/*` → `admin/`
-- `wpsuite-admin/php/*` and `wpsuite-admin/dist/*` → `hub-for-wpsuiteio/`
+- `wpsuite-admin/php/*` and `wpsuite-admin/dist/*` → `wpsuite/`
 
 Once the structure matches the layout above, create the distributable ZIP:
 
