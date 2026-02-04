@@ -178,7 +178,7 @@ AI-Kit is an independent project and is **not affiliated with, sponsored by, or 
 == Source & Build ==
 
 **Public (free) source code:**
-All code that ships in the public (free) version of AI-Kit is available here: https://github.com/scsinfo/ai-kit
+All code that ships in the public (free) version of AI-Kit is available here: https://github.com/smartcloudsol/ai-kit
 
 **Build & distribution:**
 AI-Kit is shipped to WordPress.org as a pre-built distribution. Build steps and developer notes are maintained in the GitHub repository documentation.
