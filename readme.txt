@@ -104,20 +104,20 @@ Yes — Pro includes the **[ai-kit-feature]** shortcode so you can use AI-Kit Fe
 
 == Screenshots ==
 
-1. AI-Kit onboarding panel (quick feature tour)
-2. Media Library (List) – bulk “Preview AI metadata” workflow
-3. Media Library – attachment details panel (generate SEO fields)
-4. Attachment edit screen – generate metadata for an image
-5. Gutenberg – AI-Kit Sidebar: Post metadata generation
-6. Gutenberg – AI-Kit Sidebar: Text generation (topic + tone + length + language)
-7. Gutenberg – toolbar group: Proofread / Rewrite / Translate
-8. Gutenberg – “SEO Metadata” panel in image-like blocks
-9. PRO – AI-Kit Feature block preview (summarize/write/rewrite/translate/proofread)
-10. PRO – [ai-kit-feature] shortcode usage in a page builder
-11. PRO – Chatbot Settings (Preview + configuration)
-12. PRO – Chatbot widget (front-end)
-13. AI-Kit Settings screen
-14. AI-Kit Diagnostics screen
+1. AI-Kit Settings screen
+2. AI-Kit onboarding panel (quick feature tour)
+3. AI-Kit Diagnostics screen
+4. Media Library (List) – bulk “Preview AI metadata” workflow
+5. Media Library – attachment details panel (generate SEO fields)
+6. Gutenberg – AI-Kit Sidebar: Post metadata generation
+7. Gutenberg – AI-Kit Sidebar: Text generation (topic + tone + length + language)
+8. Gutenberg – toolbar group: Proofread / Rewrite / Translate
+9. Gutenberg – “SEO Metadata” panel in image-like blocks
+10. DEV – Using renderFeature function on front-end
+11. PRO – AI-Kit Feature block preview (summarize/write/rewrite/translate/proofread)
+12. PRO – [ai-kit-feature] shortcode usage in a page builder
+13. PRO – Chatbot Settings (Preview + configuration)
+14. PRO – Chatbot widget (front-end)
 
 == External Services ==
 
