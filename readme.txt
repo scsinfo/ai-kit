@@ -4,7 +4,7 @@ Tags: ai, chrome, seo, language, tools
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: MIT
 License URI: https://mit-license.org/
 Text Domain: smartcloud-ai-kit
@@ -191,11 +191,20 @@ AI-Kit Pro includes additional functionality (such as the AI-Kit Chatbot, backen
 
 == Changelog ==
 
+= 1.0.1 =
+* Improved backend error diagnostics (including clearer reCAPTCHA failures)
+* Added chat history retention controls + fixes for persisted image attachments/preview
+
 = 1.0.0 =
 * Initial release: Media Library metadata generation, Gutenberg tools, and onboarding UI.
 * Pro features: Chatbot, frontend Feature block/shortcode, and backend-only/fallback hooks.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Includes the new chatbot history retention control plus stability fixes for
+image attachments. Update if you rely on persisted chat history or need clearer
+error reporting (especially around reCAPTCHA).
 
 = 1.0.0 =
 First stable release.

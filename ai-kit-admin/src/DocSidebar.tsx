@@ -222,7 +222,18 @@ const pages = {
         </List.Item>
       </List>
       <Text mt="xs">
-        AI-Kit automatically clears stored chat history after 24 hours.
+        AI-Kit automatically clears stored chat history after the retention
+        window.
+      </Text>
+
+      <Title order={3} mt="md" id="chatbot-history-retention">
+        <span className="highlightable">History retention</span>
+      </Title>
+      <Text>
+        Choose how many days chat history and messages stay in the browser
+        before being cleared. Set this to the same positive integer as the
+        backend <Code>SessionTTLDays</Code> parameter so the UI and DynamoDB TTL
+        expire records in sync.
       </Text>
 
       <Title order={3} mt="md" id="chatbot-color-mode">
@@ -260,11 +271,15 @@ const pages = {
         <span className="highlightable">Theme Overrides</span>
       </Title>
       <Text>
-        Optional scoped CSS injected into the chatbot’s root container. Primarily intended for overriding exposed design tokens
-        (e.g. --ai-kit*, --mantine*), but you can also add extra rules to fine-tune spacing, borders, and typography
-        when the built-in options aren’t enough. For example:{" "}
+        Optional scoped CSS injected into the chatbot’s root container.
+        Primarily intended for overriding exposed design tokens (e.g. --ai-kit*,
+        --mantine*), but you can also add extra rules to fine-tune spacing,
+        borders, and typography when the built-in options aren’t enough. For
+        example:{" "}
         <Code>
-          {":host, #ai-kit-inline-root, #ai-kit-portal-root { --ai-kit-chat-border-radius: 16px; }"}
+          {
+            ":host, #ai-kit-inline-root, #ai-kit-portal-root { --ai-kit-chat-border-radius: 16px; }"
+          }
         </Code>{" "}
         to round the chat window.
       </Text>

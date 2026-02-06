@@ -3766,24 +3766,24 @@
   dependencies:
     "@sinonjs/commons" "^3.0.1"
 
-"@smart-cloud/ai-kit-core@^1.1.13":
-  version "1.1.13"
-  resolved "https://registry.npmjs.org/@smart-cloud/ai-kit-core/-/ai-kit-core-1.1.13.tgz#dde411ec6fa98cc9dec8bc82359cf0729a847601"
-  integrity sha512-sKrbSaxu/y6QN7sq+a+qs9FRSOwiKUjKibAdBW2PpXohiG3Z2Aq/E21MFY+C3+JXZ1X/LffhzZefaOuwk+Modw==
+"@smart-cloud/ai-kit-core@^1.1.14":
+  version "1.1.14"
+  resolved "https://registry.npmjs.org/@smart-cloud/ai-kit-core/-/ai-kit-core-1.1.14.tgz#74052d0388e898b82c4d41d45b6f7d1b8d016a6b"
+  integrity sha512-4HrhBPCx7ju2p+u3vb9dO1PJvqHoz0Zm1qC69GVSvA6XvXu31gx/KXo6dxsGrcAwcVzDuu1kdkYwgrKY7mVW1A==
   dependencies:
     "@smart-cloud/gatey-core" "^2.0.11"
     "@smart-cloud/wpsuite-core" "^2.1.1"
     aws-amplify "^6.16.0"
 
-"@smart-cloud/ai-kit-ui@^1.1.26":
-  version "1.1.26"
-  resolved "https://registry.npmjs.org/@smart-cloud/ai-kit-ui/-/ai-kit-ui-1.1.26.tgz#7c716a87904567e196a27099973db2d767f2932f"
-  integrity sha512-SKMKatt3d7vqchrJ57/rsgSBC0RuCpClyZE83i/80kYBisi5/Rwo3DRp0tYc745hYUwM1DJzmXERGxRu7N1v7Q==
+"@smart-cloud/ai-kit-ui@^1.1.28":
+  version "1.1.28"
+  resolved "https://registry.npmjs.org/@smart-cloud/ai-kit-ui/-/ai-kit-ui-1.1.28.tgz#8a8ed186971a7a2aed22128da2b99fd63ed289e8"
+  integrity sha512-Pn7Iw+KX+6EHc8ppJl9eUb+EOs7Je2N8guXadelXhRoOlMXTO7wAaOXSs68qwz1JuKD0R/RyjujYObod1jY1xw==
   dependencies:
     "@emotion/cache" "^11.14.0"
     "@emotion/react" "^11.14.0"
     "@mantine/colors-generator" "^8.3.14"
-    "@smart-cloud/ai-kit-core" "^1.1.13"
+    "@smart-cloud/ai-kit-core" "^1.1.14"
     "@smart-cloud/wpsuite-core" "^2.1.2"
     "@tabler/icons-react" "^3.36.1"
     chroma-js "^3.2.0"

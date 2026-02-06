@@ -302,6 +302,11 @@ export type AiChatbotProps = AiWorkerProps & {
   historyStorage?: HistoryStorageMode;
 
   /**
+   * Empty chat history after X days
+   */
+  emptyHistoryAfterDays?: number;
+
+  /**
    * UI labels override (admin UI will populate later)
    */
   labels?: AiChatbotLabels;

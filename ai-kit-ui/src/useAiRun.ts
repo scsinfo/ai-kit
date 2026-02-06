@@ -1,3 +1,4 @@
+import { ApiError } from "@aws-amplify/api";
 import {
   AiKitLanguageCode,
   AiKitPlugin,
@@ -34,8 +35,19 @@ export type UseAiRunResult<T> = AiRunState<T> & {
 };
 
 function getErrorMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  if (typeof err === "string") return err;
+  if ((err as ApiError)?.response?.body) {
+    try {
+      return JSON.parse((err as ApiError)!.response!.body!).message;
+    } catch {
+      /* empty */
+    }
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  if (typeof err === "string") {
+    return err;
+  }
   try {
     return JSON.stringify(err);
   } catch {
@@ -149,8 +161,7 @@ export function useAiRun<T>(): UseAiRunResult<T> {
           setError(null);
           return null;
         }
-        setError(getErrorMessage(err));
-        return null;
+        throw new Error(getErrorMessage(err));
       } finally {
         setBusy(false);
         setStatusEvent(null);

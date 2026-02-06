@@ -46,12 +46,19 @@ import remarkGfm from "remark-gfm";
 import { translations } from "../i18n";
 import { useAiRun } from "../useAiRun";
 import { AiKitShellInjectedProps, withAiKitShell } from "../withAiKitShell";
+import {
+  cleanupDanglingAttachments,
+  clearAllAttachments,
+  loadAttachmentBlob,
+  persistAttachmentBlob,
+} from "./attachmentStorage";
 
 I18n.putVocabularies(translations);
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
 // New: history storage support
+const DEFAULT_PRESERVATION_TIME_DAYS = 1;
 const DEFAULT_HISTORY_STORAGE: HistoryStorageMode = "localstorage";
 const HISTORY_STORAGE_KEY = `ai-kit-chatbot-history-v1:${
   typeof window !== "undefined" ? window.location.hostname : "unknown"
@@ -117,6 +124,16 @@ type ChatResponse = {
   };
 };
 
+type ChatMessageAttachment = {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  blobId?: string;
+  objectUrl?: string | null;
+  blob?: Blob;
+};
+
 type ChatMessage = {
   id: string;
   role: "user" | "assistant";
@@ -125,6 +142,19 @@ type ChatMessage = {
   createdAt: number;
   feedback?: "accepted" | "rejected";
   clientStatus?: "pending" | "canceled";
+  attachments?: ChatMessageAttachment[];
+};
+
+type ComposerImage = {
+  id: string;
+  file: File;
+  objectUrl: string;
+};
+
+type PersistedAttachment = Omit<ChatMessageAttachment, "objectUrl" | "blob">;
+
+type PersistedChatMessage = Omit<ChatMessage, "attachments"> & {
+  attachments?: PersistedAttachment[];
 };
 
 type ActiveOp = "chat" | "feedback" | null;
@@ -197,11 +227,43 @@ function getHistoryStorage(mode: HistoryStorageMode): Storage | null {
   }
 }
 
+const createObjectUrl = (blob: Blob): string | null => {
+  if (typeof window === "undefined") return null;
+  if (typeof URL === "undefined" || typeof URL.createObjectURL !== "function")
+    return null;
+  try {
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+};
+
+const revokeObjectUrlSafe = (url?: string | null) => {
+  if (!url) return;
+  if (typeof window === "undefined") return;
+  if (typeof URL === "undefined" || typeof URL.revokeObjectURL !== "function")
+    return;
+  try {
+    URL.revokeObjectURL(url);
+  } catch {
+    // ignore
+  }
+};
+
+const disposeMessageAttachments = (attachments?: ChatMessageAttachment[]) => {
+  if (!attachments || attachments.length === 0) return;
+  attachments.forEach((att) => revokeObjectUrlSafe(att.objectUrl));
+};
+
+const disposeMessagesAttachments = (messages: ChatMessage[]) => {
+  messages.forEach((msg) => disposeMessageAttachments(msg.attachments));
+};
+
 type PersistedChat = {
   version: 1;
   lastUserSentAt: number | null;
   session?: { id: string; storedAt: number } | null;
-  messages: ChatMessage[];
+  messages: PersistedChatMessage[];
 };
 
 const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
@@ -227,6 +289,7 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
 
     // New
     historyStorage = DEFAULT_HISTORY_STORAGE,
+    emptyHistoryAfterDays = DEFAULT_PRESERVATION_TIME_DAYS,
     labels: labelsOverride,
     openButtonIconLayout = "top",
     openButtonPosition = "bottom-right",
@@ -243,7 +306,7 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
   const ai = useAiRun();
 
   const [question, setQuestion] = useState("");
-  const [images, setImages] = useState<File[]>([]);
+  const [composerImages, setComposerImages] = useState<ComposerImage[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [statusLineError, setStatusLineError] = useState<string | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -251,6 +314,11 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
   const [maxEnter, setMaxEnter] = useState(false);
   const [opened, setOpened] = useState(false);
   const [stickToBottom, setStickToBottom] = useState(true);
+  const [previewAttachment, setPreviewAttachment] = useState<{
+    url: string;
+    title?: string;
+  } | null>(null);
+  const [historyReady, setHistoryReady] = useState(false);
 
   const [wheelHostEl, setWheelHostEl] = useState<HTMLDivElement | null>(null);
   const [scrollerEl, setScrollerEl] = useState<HTMLDivElement | null>(null);
@@ -272,21 +340,31 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
   const sessionRef = useRef<{ id: string; storedAt: number } | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
+  const disposeComposerImageList = useCallback((list: ComposerImage[]) => {
+    list.forEach((img) => revokeObjectUrlSafe(img.objectUrl));
+  }, []);
+
+  const clearComposerImages = useCallback(() => {
+    disposeComposerImageList(composerImagesRef.current);
+    setComposerImages([]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [disposeComposerImageList]);
+
   // New: persist timestamp of last actually-sent user message
   const [lastUserSentAt, setLastUserSentAt] = useState<number | null>(null);
 
   // Keep latest values in refs for stable callbacks
   const questionRef = useRef(question);
-  const imagesRef = useRef(images);
   const messagesRef = useRef(messages);
   const lastUserSentAtRef = useRef(lastUserSentAt);
+  const composerImagesRef = useRef(composerImages);
 
   useEffect(() => {
     questionRef.current = question;
   }, [question]);
   useEffect(() => {
-    imagesRef.current = images;
-  }, [images]);
+    composerImagesRef.current = composerImages;
+  }, [composerImages]);
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -396,15 +474,15 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
     };
   }, [opened, isMaximized, closeModal]);
 
-  const imagePreviews = useMemo(() => {
-    if (
-      typeof window === "undefined" ||
-      typeof URL.createObjectURL !== "function"
-    ) {
-      return images.map((file) => ({ file, url: "" }));
-    }
-    return images.map((file) => ({ file, url: URL.createObjectURL(file) }));
-  }, [images]);
+  const composerPreviews = useMemo(
+    () =>
+      composerImages.map((img) => ({
+        id: img.id,
+        url: img.objectUrl,
+        title: img.file.name,
+      })),
+    [composerImages],
+  );
 
   useEffect(() => {
     if (!hasMessages) setStickToBottom(true);
@@ -412,16 +490,9 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
 
   useEffect(() => {
     return () => {
-      if (
-        typeof window === "undefined" ||
-        typeof URL.revokeObjectURL !== "function"
-      )
-        return;
-      imagePreviews.forEach(({ url }) => {
-        if (url) URL.revokeObjectURL(url);
-      });
+      disposeComposerImageList(composerImagesRef.current);
     };
-  }, [imagePreviews]);
+  }, [disposeComposerImageList]);
 
   useEffect(() => {
     const el = scrollerEl;
@@ -445,6 +516,12 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
       el.scrollTop = el.scrollHeight;
     }
   }, [messages, ai.busy, stickToBottom, scrollerEl]);
+
+  useEffect(() => {
+    if (!opened) {
+      setPreviewAttachment(null);
+    }
+  }, [opened]);
 
   const statusText = useMemo(() => {
     if (!ai.busy) return null;
@@ -505,30 +582,53 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
 
   const onPickImages = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const existing = imagesRef.current;
+      const existing = composerImagesRef.current;
       const files = Array.from(e.target.files || []);
       const remaining = Math.max(0, resolvedMaxImages - existing.length);
 
-      const picked = files.slice(0, remaining).filter((f) => {
-        const okType = /image\/(jpeg|png|gif|webp)/i.test(f.type);
-        const okSize = f.size <= resolvedMaxBytes;
-        const okNew = !existing.find(
-          (x) =>
-            x.name === f.name &&
-            x.size === f.size &&
-            x.lastModified === f.lastModified,
-        );
-        return okType && okSize && okNew;
-      });
+      if (remaining === 0) {
+        e.currentTarget.value = "";
+        return;
+      }
 
-      if (picked.length) setImages((prev) => [...prev, ...picked]);
+      const picked: ComposerImage[] = [];
+
+      for (const file of files) {
+        if (picked.length >= remaining) break;
+        const okType = /image\/(jpeg|png|gif|webp)/i.test(file.type);
+        const okSize = file.size <= resolvedMaxBytes;
+        const duplicate = [...existing, ...picked].some(
+          (x) =>
+            x.file.name === file.name &&
+            x.file.size === file.size &&
+            x.file.lastModified === file.lastModified,
+        );
+
+        if (!okType || !okSize || duplicate) continue;
+
+        const objectUrl = createObjectUrl(file);
+        if (!objectUrl) continue;
+
+        picked.push({
+          id: createMessageId("composer-image"),
+          file,
+          objectUrl,
+        });
+      }
+
+      if (picked.length) setComposerImages((prev) => [...prev, ...picked]);
       e.currentTarget.value = "";
     },
     [resolvedMaxImages, resolvedMaxBytes],
   );
 
   const removeImage = useCallback((ix: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== ix));
+    setComposerImages((prev) => {
+      if (ix < 0 || ix >= prev.length) return prev;
+      const target = prev[ix];
+      if (target) revokeObjectUrlSafe(target.objectUrl);
+      return prev.filter((_, i) => i !== ix);
+    });
   }, []);
 
   // New: clear feedback errors back to Ready after a short time
@@ -551,7 +651,168 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
     };
   }, [statusLineError]);
 
+  const buildUserAttachments = useCallback(
+    async (sources: ComposerImage[]): Promise<ChatMessageAttachment[]> => {
+      if (!sources.length) return [];
+
+      const shouldPersist = historyStorage !== "nostorage";
+
+      const built = await Promise.all(
+        sources.map(async (img) => {
+          const attachmentId = createMessageId("attachment");
+          let blobId: string | undefined;
+          if (shouldPersist) {
+            try {
+              const persisted = await persistAttachmentBlob(
+                attachmentId,
+                img.file,
+                {
+                  name: img.file.name,
+                  type: img.file.type,
+                  size: img.file.size,
+                },
+              );
+              blobId = persisted ?? undefined;
+            } catch (error) {
+              console.warn("[AiChatbot] Failed to persist attachment", error);
+            }
+          }
+
+          const objectUrl = createObjectUrl(img.file);
+
+          return {
+            id: attachmentId,
+            name: img.file.name,
+            type: img.file.type || "application/octet-stream",
+            size: img.file.size,
+            blobId,
+            objectUrl: objectUrl ?? undefined,
+            blob: img.file,
+          } satisfies ChatMessageAttachment;
+        }),
+      );
+
+      return built.filter(Boolean);
+    },
+    [historyStorage],
+  );
+
+  const hydratePersistedMessages = useCallback(
+    async (stored: PersistedChatMessage[]): Promise<ChatMessage[]> => {
+      const hydrated: ChatMessage[] = [];
+
+      for (const msg of stored) {
+        let attachments: ChatMessageAttachment[] | undefined;
+        if (msg.attachments && msg.attachments.length > 0) {
+          attachments = [];
+          for (const att of msg.attachments) {
+            let blob: Blob | undefined;
+            if (att.blobId) {
+              try {
+                const loaded = await loadAttachmentBlob(att.blobId);
+                blob = loaded?.blob ?? undefined;
+              } catch (error) {
+                console.warn("[AiChatbot] Failed to hydrate attachment", error);
+              }
+            }
+
+            if (!blob) {
+              continue;
+            }
+
+            const objectUrl = blob ? createObjectUrl(blob) : null;
+
+            attachments.push({
+              ...att,
+              objectUrl: objectUrl ?? undefined,
+              blob: blob ?? undefined,
+            });
+          }
+        }
+
+        hydrated.push({
+          ...msg,
+          attachments,
+        });
+      }
+
+      return hydrated;
+    },
+    [],
+  );
+
+  const restoreAttachmentsToComposer = useCallback(
+    async (attachments?: ChatMessageAttachment[]) => {
+      if (!attachments || attachments.length === 0) {
+        clearComposerImages();
+        return;
+      }
+
+      const restored: ComposerImage[] = [];
+
+      for (const attachment of attachments) {
+        let blob: Blob | undefined = attachment.blob;
+        if (!blob && attachment.blobId) {
+          try {
+            const loaded = await loadAttachmentBlob(attachment.blobId);
+            blob = loaded?.blob ?? undefined;
+          } catch (error) {
+            console.warn("[AiChatbot] Failed to reload attachment", error);
+          }
+        }
+
+        if (!blob) continue;
+
+        const file =
+          blob instanceof File
+            ? blob
+            : new File([blob], attachment.name || "attachment", {
+                type:
+                  attachment.type || blob.type || "application/octet-stream",
+              });
+
+        const objectUrl = createObjectUrl(file);
+        if (!objectUrl) continue;
+
+        restored.push({
+          id: createMessageId("composer-image"),
+          file,
+          objectUrl,
+        });
+
+        if (restored.length >= resolvedMaxImages) break;
+      }
+
+      if (restored.length === 0) {
+        clearComposerImages();
+        return;
+      }
+
+      setComposerImages((prev) => {
+        disposeComposerImageList(prev);
+        return restored;
+      });
+
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    [clearComposerImages, disposeComposerImageList, resolvedMaxImages],
+  );
+
+  const openAttachmentPreview = useCallback(
+    (url?: string | null, title?: string) => {
+      if (!url) return;
+      setPreviewAttachment({ url, title });
+    },
+    [],
+  );
+
+  const closeAttachmentPreview = useCallback(() => {
+    setPreviewAttachment(null);
+  }, []);
+
   const resetConversation = useCallback(() => {
+    disposeMessagesAttachments(messagesRef.current);
+    clearComposerImages();
     setMessages([]);
     setStatusLineError(null);
     sessionRef.current = null;
@@ -559,7 +820,6 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
     setStickToBottom(true);
     setResetDialogOpen(false);
 
-    // clear persisted history immediately
     const storage = getHistoryStorage(historyStorage);
     if (storage) {
       try {
@@ -568,7 +828,9 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
         // ignore
       }
     }
-  }, [historyStorage]);
+
+    void clearAllAttachments();
+  }, [clearComposerImages, historyStorage]);
 
   const handleResetClick = useCallback(() => {
     // Open confirmation dialog
@@ -595,7 +857,8 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
       try {
         const activeSessionId =
           sessionRef.current &&
-          Date.now() - sessionRef.current.storedAt < TWENTY_FOUR_HOURS_MS
+          Date.now() - sessionRef.current.storedAt <
+            emptyHistoryAfterDays * TWENTY_FOUR_HOURS_MS
             ? sessionRef.current.id
             : undefined;
         if (!activeSessionId) return;
@@ -655,8 +918,8 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
     cancelRequestedRef.current = false;
     setStatusLineError(null);
     setActiveOp("chat");
-
-    const selectedImages = imagesRef.current;
+    const selectedImages = [...composerImagesRef.current];
+    const userAttachments = await buildUserAttachments(selectedImages);
 
     const userMessageId = createMessageId("user");
     const userMessageCreatedAt = Date.now();
@@ -666,12 +929,12 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
       content: trimmed,
       createdAt: userMessageCreatedAt,
       clientStatus: "pending",
+      attachments: userAttachments.length ? userAttachments : undefined,
     };
 
     // optimistic UI
     setQuestion("");
-    setImages([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    clearComposerImages();
     setMessages((prev) => [...prev, userMessage]);
 
     if (!opened) setOpened(true);
@@ -680,7 +943,8 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
     try {
       const activeSessionId =
         sessionRef.current &&
-        Date.now() - sessionRef.current.storedAt < TWENTY_FOUR_HOURS_MS
+        Date.now() - sessionRef.current.storedAt <
+          emptyHistoryAfterDays * TWENTY_FOUR_HOURS_MS
           ? sessionRef.current.id
           : undefined;
 
@@ -689,7 +953,7 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
           {
             sessionId: activeSessionId,
             message: trimmed,
-            images: selectedImages,
+            images: selectedImages.map((img) => img.file),
           },
           {
             signal,
@@ -705,7 +969,9 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
         return;
       }
 
-      if (!res) throw new Error(I18n.get(labels.emptyResponseLabel));
+      if (!res) {
+        throw new Error(I18n.get(ai.error ?? labels.emptyResponseLabel));
+      }
 
       if (res.sessionId) {
         sessionRef.current = {
@@ -771,6 +1037,8 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
     }
   }, [
     ai,
+    buildUserAttachments,
+    clearComposerImages,
     opened,
     scrollToBottom,
     markLastPendingAs,
@@ -830,11 +1098,18 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
     });
   }, []);
 
-  const handleEditCanceled = useCallback((msg: ChatMessage) => {
-    setQuestion(msg.content);
-    setMessages((prev) => prev.filter((m) => m.id !== msg.id));
-    queueMicrotask(() => questionInputRef.current?.focus());
-  }, []);
+  const handleEditCanceled = useCallback(
+    (msg: ChatMessage) => {
+      setQuestion(msg.content);
+      void (async () => {
+        await restoreAttachmentsToComposer(msg.attachments);
+        setMessages((prev) => prev.filter((m) => m.id !== msg.id));
+        disposeMessageAttachments(msg.attachments);
+        queueMicrotask(() => questionInputRef.current?.focus());
+      })();
+    },
+    [restoreAttachmentsToComposer],
+  );
 
   const renderOpenButtonIcon = useMemo(() => {
     if (!showOpenButtonIcon) return null;
@@ -1006,83 +1281,118 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
   // -----------------------------
 
   useEffect(() => {
+    let canceled = false;
     const storage = getHistoryStorage(historyStorage);
-    if (!storage) return;
-
-    try {
-      const raw = storage.getItem(HISTORY_STORAGE_KEY);
-      if (!raw) return;
-
-      const parsed = JSON.parse(raw) as PersistedChat;
-      const last =
-        typeof parsed?.lastUserSentAt === "number"
-          ? parsed.lastUserSentAt
-          : null;
-
-      // Only use storage within 24 hours
-      if (!last || Date.now() - last > TWENTY_FOUR_HOURS_MS) {
-        storage.removeItem(HISTORY_STORAGE_KEY);
-        return;
+    if (!storage) {
+      if (historyStorage === "nostorage") {
+        void clearAllAttachments();
       }
-
-      const loadedMessages = Array.isArray(parsed.messages)
-        ? parsed.messages
-        : [];
-
-      // Normalize stale "pending" to "canceled" after reload
-      const normalized = loadedMessages.map((m) => {
-        if (m?.role === "user" && m.clientStatus === "pending") {
-          return { ...m, clientStatus: "canceled" as const };
-        }
-        return m;
-      });
-
-      setMessages(normalized);
-      setLastUserSentAt(last);
-
-      if (parsed.session && parsed.session.id) {
-        sessionRef.current = parsed.session;
-      }
-    } catch {
-      try {
-        storage.removeItem(HISTORY_STORAGE_KEY);
-      } catch {
-        // ignore
-      }
-    }
-  }, [historyStorage]);
-
-  useEffect(() => {
-    const storage = getHistoryStorage(historyStorage);
-    if (!storage) return;
-
-    if (historyStorage === "nostorage") {
-      try {
-        storage.removeItem(HISTORY_STORAGE_KEY);
-      } catch {
-        // ignore
-      }
+      setHistoryReady(true);
       return;
     }
+
+    (async () => {
+      try {
+        const raw = storage.getItem(HISTORY_STORAGE_KEY);
+        if (!raw) {
+          setHistoryReady(true);
+          return;
+        }
+
+        const parsed = JSON.parse(raw) as PersistedChat;
+        const last =
+          typeof parsed?.lastUserSentAt === "number"
+            ? parsed.lastUserSentAt
+            : null;
+
+        if (
+          !last ||
+          Date.now() - last > emptyHistoryAfterDays * TWENTY_FOUR_HOURS_MS
+        ) {
+          storage.removeItem(HISTORY_STORAGE_KEY);
+          await clearAllAttachments();
+          setHistoryReady(true);
+          return;
+        }
+
+        const loadedMessages = Array.isArray(parsed.messages)
+          ? parsed.messages
+          : [];
+
+        const normalized = loadedMessages.map((m) => {
+          if (m?.role === "user" && m.clientStatus === "pending") {
+            return { ...m, clientStatus: "canceled" as const };
+          }
+          return m;
+        });
+
+        const hydrated = await hydratePersistedMessages(normalized);
+
+        if (canceled) {
+          disposeMessagesAttachments(hydrated);
+          return;
+        }
+
+        setMessages(hydrated);
+        setLastUserSentAt(last);
+
+        if (parsed.session && parsed.session.id) {
+          sessionRef.current = parsed.session;
+        }
+      } catch (error) {
+        console.warn("[AiChatbot] Failed to load history", error);
+        try {
+          storage.removeItem(HISTORY_STORAGE_KEY);
+        } catch {
+          // ignore
+        }
+      } finally {
+        if (!canceled) setHistoryReady(true);
+      }
+    })();
+
+    return () => {
+      canceled = true;
+    };
+  }, [historyStorage, emptyHistoryAfterDays, hydratePersistedMessages]);
+
+  useEffect(() => {
+    if (!historyReady) return;
+
+    const storage = getHistoryStorage(historyStorage);
+    if (!storage) return;
 
     const last = lastUserSentAtRef.current;
 
-    if (!last) return;
+    if (!last) {
+      return;
+    }
 
-    if (Date.now() - last > TWENTY_FOUR_HOURS_MS) {
+    if (Date.now() - last > emptyHistoryAfterDays * TWENTY_FOUR_HOURS_MS) {
       try {
         storage.removeItem(HISTORY_STORAGE_KEY);
       } catch {
         // ignore
       }
+      void cleanupDanglingAttachments(new Set());
       return;
     }
+
+    const persistableMessages: PersistedChatMessage[] = messages.map(
+      ({ attachments, ...rest }) => ({
+        ...rest,
+        attachments: attachments?.map(
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          ({ objectUrl, blob, ...persisted }) => persisted,
+        ),
+      }),
+    );
 
     const payload: PersistedChat = {
       version: 1,
       lastUserSentAt: last,
       session: sessionRef.current,
-      messages,
+      messages: persistableMessages,
     };
 
     try {
@@ -1090,7 +1400,22 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
     } catch {
       // ignore
     }
-  }, [messages, lastUserSentAt, historyStorage]);
+
+    const validIds = new Set<string>();
+    persistableMessages.forEach((msg) => {
+      msg.attachments?.forEach((att) => {
+        if (att.blobId) validIds.add(att.blobId);
+      });
+    });
+
+    void cleanupDanglingAttachments(validIds);
+  }, [
+    historyReady,
+    messages,
+    lastUserSentAt,
+    historyStorage,
+    emptyHistoryAfterDays,
+  ]);
 
   if (
     (previewMode && !showChatbotPreview) ||
@@ -1231,6 +1556,43 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
                           </Text>
                         )}
                       </Stack>
+
+                      {msg.attachments && msg.attachments.length > 0 && (
+                        <Group className="ai-thumbs ai-message-thumbs" gap="xs">
+                          {msg.attachments.map((attachment) => (
+                            <button
+                              key={attachment.id}
+                              type="button"
+                              className="thumb"
+                              style={{
+                                backgroundImage: attachment.objectUrl
+                                  ? `url(${attachment.objectUrl})`
+                                  : undefined,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                backgroundRepeat: "no-repeat",
+                              }}
+                              onClick={() =>
+                                openAttachmentPreview(
+                                  attachment.objectUrl,
+                                  attachment.name,
+                                )
+                              }
+                              disabled={!attachment.objectUrl}
+                              title={attachment.name || I18n.get("View image")}
+                              aria-label={
+                                attachment.name || I18n.get("View image")
+                              }
+                            >
+                              {!attachment.objectUrl && (
+                                <Text size="xs" c="dimmed">
+                                  {I18n.get("Loading image...")}
+                                </Text>
+                              )}
+                            </button>
+                          ))}
+                        </Group>
+                      )}
 
                       {isLastCanceled && (
                         <Group justify="flex-end" gap="xs">
@@ -1412,24 +1774,31 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
                 </Group>
 
                 <Group justify="flex-end">
-                  <Button
-                    variant="outline"
-                    leftSection={<IconPaperclip size={18} />}
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={images.length >= resolvedMaxImages}
-                    title={I18n.get(labels.addImageLabel)}
-                    data-ai-kit-add-image-button
-                  >
-                    {I18n.get(labels.addLabel)}
-                  </Button>
-                  <Input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/gif,image/webp"
-                    style={{ display: "none" }}
-                    multiple
-                    onChange={onPickImages}
-                  />
+                  {resolvedMaxImages > 0 && (
+                    <>
+                      <Button
+                        variant="outline"
+                        leftSection={<IconPaperclip size={18} />}
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={
+                          composerImages.length >= resolvedMaxImages ||
+                          isChatBusy
+                        }
+                        title={I18n.get(labels.addImageLabel)}
+                        data-ai-kit-add-image-button
+                      >
+                        {I18n.get(labels.addLabel)}
+                      </Button>
+                      <Input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/gif,image/webp"
+                        style={{ display: "none" }}
+                        multiple
+                        onChange={onPickImages}
+                      />
+                    </>
+                  )}
 
                   {/* Send -> Cancel switch (ChatGPT-like) */}
                   <Button
@@ -1444,11 +1813,13 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
                 </Group>
               </Group>
 
-              {imagePreviews.length > 0 && (
+              {composerPreviews.length > 0 && (
                 <Group className="ai-thumbs" mt="xs" gap="xs">
-                  {imagePreviews.map(({ url }, i) => (
+                  {composerPreviews.map(({ url, title }, i) => (
                     <div
-                      key={i}
+                      key={composerImages[i]?.id ?? i}
+                      role="button"
+                      tabIndex={0}
                       className="thumb"
                       style={{
                         backgroundImage: url ? `url(${url})` : undefined,
@@ -1457,10 +1828,21 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
                         backgroundRepeat: "no-repeat",
                         overflow: "visible",
                       }}
+                      aria-label={title || I18n.get("View image")}
+                      onClick={() => openAttachmentPreview(url, title)}
+                      onKeyDown={(evt) => {
+                        if (evt.key === "Enter" || evt.key === " ") {
+                          evt.preventDefault();
+                          openAttachmentPreview(url, title);
+                        }
+                      }}
                     >
                       <Button
                         variant="white"
-                        onClick={() => removeImage(i)}
+                        onClick={(evt) => {
+                          evt.stopPropagation();
+                          removeImage(i);
+                        }}
                         aria-label={I18n.get(labels.removeImageLabel)}
                         mt="-xs"
                         mr="-xs"
@@ -1480,6 +1862,22 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
           </div>
         </Modal.Root>
       )}
+
+      <Modal
+        opened={!!previewAttachment}
+        onClose={closeAttachmentPreview}
+        centered
+        size="auto"
+        title={previewAttachment?.title || I18n.get("Image preview")}
+      >
+        {previewAttachment && (
+          <img
+            src={previewAttachment.url}
+            alt={previewAttachment.title || I18n.get("Image preview")}
+            style={{ maxWidth: "100%", maxHeight: "70vh" }}
+          />
+        )}
+      </Modal>
     </Group>
   );
 };

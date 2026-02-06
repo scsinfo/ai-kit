@@ -46,6 +46,7 @@ declare const AiChatbot: React__default.FC<_smart_cloud_ai_kit_core.AiWorkerProp
     maxImageBytes?: number;
     previewMode?: boolean;
     historyStorage?: HistoryStorageMode;
+    emptyHistoryAfterDays?: number;
     labels?: AiChatbotLabels;
     openButtonIconLayout?: _smart_cloud_ai_kit_core.OpenButtonIconLayout;
     openButtonPosition?: _smart_cloud_ai_kit_core.OpenButtonPosition;

@@ -232,7 +232,7 @@ onDomReady(async () => {
       if (badge) {
         (badge as HTMLElement).style.visibility = "hidden";
         (badge as HTMLElement).style.display = "none";
-        observer.disconnect();
+        //observer.disconnect();
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });
