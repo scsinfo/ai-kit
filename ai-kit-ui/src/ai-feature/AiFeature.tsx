@@ -22,9 +22,9 @@ import {
   type AiKitLanguageCode,
   type AiKitStatusEvent,
   type AiModePreference,
-  type ContextKind,
   detectLanguage,
   type DetectLanguageOutput,
+  FeatureOptions,
   getAiKitPlugin,
   LANGUAGE_OPTIONS,
   prompt,
@@ -138,23 +138,11 @@ function normalizeLang(
 
 async function detectTopLanguage(
   text: string,
-  args: {
-    signal: AbortSignal;
-    onStatus?: (e: AiKitStatusEvent) => void;
-    context?: ContextKind;
-    modeOverride?: AiModePreference;
-    onDeviceTimeout?: number;
-  },
+  featureOptions: FeatureOptions,
 ): Promise<AiKitLanguageCode> {
   const res: DetectLanguageOutput = await detectLanguage(
     { text },
-    {
-      signal: args.signal,
-      onStatus: args.onStatus,
-      context: args.context,
-      modeOverride: args.modeOverride,
-      onDeviceTimeoutOverride: args.onDeviceTimeout,
-    },
+    featureOptions,
   );
   const top =
     normalizeLang(res.result?.candidates?.[0]?.detectedLanguage) ?? "en";
@@ -164,6 +152,7 @@ async function detectTopLanguage(
 async function parseImageMetadataFromPromptResult(
   text: string,
   outputLang: AiKitLanguageCode | "",
+  featureOptions: FeatureOptions,
 ): Promise<GeneratedImageMetadata> {
   const cleaned = stripCodeFence(text || "").trim();
   if (!cleaned) return {};
@@ -180,11 +169,14 @@ async function parseImageMetadataFromPromptResult(
         typeof parsed.alt === "string"
           ? outputLang && outputLang !== "en"
             ? (
-                await translate({
-                  text: parsed.alt,
-                  sourceLanguage: "en",
-                  targetLanguage: outputLang,
-                })
+                await translate(
+                  {
+                    text: parsed.alt,
+                    sourceLanguage: "en",
+                    targetLanguage: outputLang,
+                  },
+                  featureOptions,
+                )
               ).result
             : parsed.alt
           : "",
@@ -234,6 +226,7 @@ async function parseImageMetadataFromPromptResult(
 async function parsePostMetadataFromPromptResult(
   text: string,
   outputLang: AiKitLanguageCode | "",
+  featureOptions: FeatureOptions,
 ): Promise<GeneratedPostMetadata> {
   const cleaned = stripCodeFence(text || "").trim();
   if (!cleaned) return {};
@@ -248,11 +241,14 @@ async function parsePostMetadataFromPromptResult(
         typeof parsed.title === "string"
           ? outputLang && outputLang !== "en"
             ? (
-                await translate({
-                  text: parsed.title,
-                  sourceLanguage: "en",
-                  targetLanguage: outputLang,
-                })
+                await translate(
+                  {
+                    text: parsed.title,
+                    sourceLanguage: "en",
+                    targetLanguage: outputLang,
+                  },
+                  featureOptions,
+                )
               ).result
             : parsed.title
           : "",
@@ -260,11 +256,14 @@ async function parsePostMetadataFromPromptResult(
         typeof parsed.excerpt === "string"
           ? outputLang && outputLang !== "en"
             ? (
-                await translate({
-                  text: parsed.excerpt,
-                  sourceLanguage: "en",
-                  targetLanguage: outputLang,
-                })
+                await translate(
+                  {
+                    text: parsed.excerpt,
+                    sourceLanguage: "en",
+                    targetLanguage: outputLang,
+                  },
+                  featureOptions,
+                )
               ).result
             : parsed.excerpt
           : "",
@@ -512,7 +511,12 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
               try {
                 const res = await detectLanguage(
                   { text: text!.trim() },
-                  { signal, onStatus },
+                  {
+                    signal,
+                    context,
+                    modeOverride,
+                    onDeviceTimeoutOverride: onDeviceTimeout,
+                  },
                 );
                 const langCodes = res.result?.candidates
                   ?.filter((c) => c.confidence && c.confidence > 0.1)
@@ -543,7 +547,9 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
               if (inputLang === "auto") {
                 inputLang = await detectTopLanguage(text!.trim(), {
                   signal,
-                  onDeviceTimeout,
+                  context,
+                  modeOverride,
+                  onDeviceTimeoutOverride: onDeviceTimeout,
                 });
                 setInputLanguage(inputLang);
               }
@@ -585,7 +591,9 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
               if (outputLanguage === "auto") {
                 outLang = await detectTopLanguage(text!.trim(), {
                   signal,
-                  onDeviceTimeout,
+                  context,
+                  modeOverride,
+                  onDeviceTimeoutOverride: onDeviceTimeout,
                 });
                 setOutputLanguage(outLang);
               }
@@ -624,28 +632,37 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
               outputLanguage: outLang as WriteArgs["outputLanguage"],
             };
             const res = await ai.run(async ({ signal, onStatus }) => {
+              const langFeatureOptions: FeatureOptions = {
+                signal,
+                context,
+                modeOverride,
+                onDeviceTimeoutOverride: onDeviceTimeout,
+              };
               const inLang = await detectTopLanguage(
                 text!.trim() + "\n" + (instructions?.trim() || ""),
-                {
-                  signal,
-                  onDeviceTimeout,
-                },
+                langFeatureOptions,
               );
               if (inLang !== outLang && inLang !== "en") {
                 args.prompt = (
-                  await translate({
-                    text: args.prompt,
-                    sourceLanguage: inLang,
-                    targetLanguage: "en",
-                  })
+                  await translate(
+                    {
+                      text: args.prompt,
+                      sourceLanguage: inLang,
+                      targetLanguage: "en",
+                    },
+                    langFeatureOptions,
+                  )
                 ).result;
                 if (instructions) {
                   args.context = (
-                    await translate({
-                      text: instructions,
-                      sourceLanguage: inLang,
-                      targetLanguage: "en",
-                    })
+                    await translate(
+                      {
+                        text: instructions,
+                        sourceLanguage: inLang,
+                        targetLanguage: "en",
+                      },
+                      langFeatureOptions,
+                    )
                   ).result;
                 }
               }
@@ -710,10 +727,18 @@ Follow these additional instructions: ${instructions}`
                 ? outputLanguage
                 : null) || readDefaultOutputLanguage();
             try {
-              const parsed = await parsePostMetadataFromPromptResult(
-                cleaned,
-                outLang,
-              );
+              const parsed = (await ai.run(async ({ signal }) => {
+                return await parsePostMetadataFromPromptResult(
+                  cleaned,
+                  outLang,
+                  {
+                    signal,
+                    context,
+                    modeOverride,
+                    onDeviceTimeoutOverride: onDeviceTimeout,
+                  },
+                );
+              })) as string | null;
               setGenerated(parsed as never);
             } catch (e) {
               // If parsing fails, keep raw in the modal. User can still copy/paste.
@@ -786,10 +811,18 @@ Follow these additional instructions: ${instructions}`
 
               const cleaned = stripCodeFence(res).trim();
               try {
-                const parsed = await parseImageMetadataFromPromptResult(
-                  cleaned,
-                  outLang,
-                );
+                const parsed = (await ai.run(async ({ signal }) => {
+                  return await parseImageMetadataFromPromptResult(
+                    cleaned,
+                    outLang,
+                    {
+                      signal,
+                      context,
+                      modeOverride,
+                      onDeviceTimeoutOverride: onDeviceTimeout,
+                    },
+                  );
+                })) as string | null;
                 setGenerated(parsed as never);
               } catch (e) {
                 // If parsing fails, keep raw in the modal. User can still copy/paste.

@@ -1,11 +1,11 @@
 import * as _smart_cloud_ai_kit_core from '@smart-cloud/ai-kit-core';
-import { ContextKind, AiModePreference, AiKitLanguageCode, HistoryStorageMode, AiChatbotLabels, AiKitStatusEvent, AiWorkerProps } from '@smart-cloud/ai-kit-core';
+import { AiModePreference, AiKitLanguageCode, HistoryStorageMode, AiChatbotLabels, AiKitStatusEvent, AiWorkerProps } from '@smart-cloud/ai-kit-core';
 import * as React from 'react';
 import React__default, { FC, ComponentType } from 'react';
 
 declare const AiFeature: FC<_smart_cloud_ai_kit_core.AiWorkerProps & {
     mode: _smart_cloud_ai_kit_core.AiFeatureMode;
-    context?: ContextKind;
+    context?: _smart_cloud_ai_kit_core.ContextKind;
     modeOverride?: AiModePreference;
     autoRun?: boolean;
     onDeviceTimeout?: number;
