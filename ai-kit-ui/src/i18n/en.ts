@@ -13,6 +13,7 @@ export const enDict: Record<string, string> = {
   "Ask anything…": "Ask anything…",
   "Ask me": "Ask me",
   Assistant: "Assistant",
+  "Assistant is thinking...": "Assistant is thinking...",
   "Auto-detect": "Auto-detect",
   Cancel: "Cancel",
   Caption: "Caption",

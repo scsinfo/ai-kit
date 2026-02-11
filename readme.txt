@@ -4,7 +4,7 @@ Tags: ai, chrome, seo, language, tools
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.0.2
+Stable tag: 1.0.5
 License: MIT
 License URI: https://mit-license.org/
 Text Domain: smartcloud-ai-kit
@@ -191,6 +191,17 @@ AI-Kit Pro includes additional functionality (such as the AI-Kit Chatbot, backen
 
 == Changelog ==
 
+= 1.0.5 =
+Perf: Chatbot requests now reuse a successful reCAPTCHA verification for a short time window to reduce latency and verification costs.
+Admin: Added a “reCAPTCHA chat verification window (seconds)” setting (default: 120s).
+
+= 1.0.4 =
+Fix: Fixed translation of some AI Feature results into the requested language. In certain cases the translation context (admin vs frontend) was missing, causing translations to be routed through the admin context unintentionally.
+
+= 1.0.3 =
+UX: During backend calls, AiFeature and AiChatbot now display the same user-friendly status messages as the on-device flow (e.g. “Generating text…” instead of “Sending request…” / “Waiting for backend…”).
+Admin: The chatbot “Assistant is thinking…” text can be overridden in the admin UI.
+
 = 1.0.2 =
 Fixed the pre-run language detection/translation flow for AiFeature blocks so it now respects the configured context.
 
@@ -203,6 +214,15 @@ Fixed the pre-run language detection/translation flow for AiFeature blocks so it
 * Pro features: Chatbot, frontend Feature block/shortcode, and backend-only/fallback hooks.
 
 == Upgrade Notice ==
+
+= 1.0.5 =
+Recommended if you use the Chatbot with reCAPTCHA: reduces repeated verification calls (lower latency and cost) via a short verification window, and adds Classic reCAPTCHA support.
+
+= 1.0.4 =
+Recommended update if you use AI Features with result translation: ensures translations run in the correct context (admin vs frontend) and reliably translate outputs to the requested language.
+
+= 1.0.3 =
+Improved UX: backend processing now shows more natural on-device style status messages.
 
 = 1.0.2 =
 This update fixes language detection/translation that runs before individual AiFeature executions. 

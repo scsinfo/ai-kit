@@ -13,6 +13,7 @@ export const itDict: Record<string, string> = {
   "Ask anything…": "Chiedi qualsiasi cosa…",
   "Ask me": "Chiedimi",
   Assistant: "Assistente",
+  "Assistant is thinking...": "L'assistente sta pensando...",
   "Auto-detect": "Rilevamento automatico",
   Cancel: "Cancellare",
   Caption: "Didascalia",

@@ -73,6 +73,28 @@ const pages = {
         <Code>recaptcha.net</Code> instead of <Code>google.com</Code>. This is
         useful in regions where <Code>google.com</Code> may be blocked.
       </Text>
+      <Title order={3} mt="md" id="recaptcha-chat-ttl-seconds">
+        <span className="highlightable">
+          reCAPTCHA chat verification window (seconds)
+        </span>
+      </Title>
+      <Text>
+        Optimizes multi-turn chats (for example a chatbot conversation). After
+        a successful reCAPTCHA verification, AI-Kit will reuse that result for a
+        short time window and won’t request/verify new reCAPTCHA tokens on every
+        message.
+      </Text>
+      <List size="sm" spacing="xs" mt="xs" withPadding>
+        <List.Item>
+          Default: <Code>120</Code> seconds.
+        </List.Item>
+        <List.Item>
+          Set to <Code>0</Code> to disable the window (verify every message).
+        </List.Item>
+        <List.Item>
+          Range: <Code>0</Code>–<Code>3600</Code> seconds.
+        </List.Item>
+      </List>
       <Title order={3} mt="md" id="hide-powered-by-ai-kit">
         <span className="highlightable">Hide “Powered by AI-Kit”</span>
       </Title>

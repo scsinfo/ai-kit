@@ -28,7 +28,8 @@ class Admin
             useRecaptchaEnterprise: false,
             useRecaptchaNet: false,
             enablePoweredBy: false,
-            defaultOutputLanguage: ""
+            defaultOutputLanguage: "",
+            reCaptchaChatTtlSeconds: 120,
         );
 
         // WP can return array/object depending on previous versions / serialization.
@@ -134,6 +135,19 @@ class Admin
             ? (string) $settings_param['defaultOutputLanguage']
             : "";
 
+        $reCaptchaChatTtlSeconds = 120;
+        if (isset($settings_param['reCaptchaChatTtlSeconds'])) {
+            // Allow string/number payloads.
+            $reCaptchaChatTtlSeconds = (int) $settings_param['reCaptchaChatTtlSeconds'];
+        }
+        // Clamp to a safe range (0..3600). 0 = disabled.
+        if ($reCaptchaChatTtlSeconds < 0) {
+            $reCaptchaChatTtlSeconds = 0;
+        }
+        if ($reCaptchaChatTtlSeconds > 3600) {
+            $reCaptchaChatTtlSeconds = 3600;
+        }
+
         $this->settings = new AiKitSettings(
             sharedContext: sanitize_textarea_field($sharedContext),
             reCaptchaSiteKey: sanitize_text_field($reCaptchaSiteKey),
@@ -141,6 +155,7 @@ class Admin
             useRecaptchaNet: (bool) ($settings_param['useRecaptchaNet'] ?? false),
             enablePoweredBy: (bool) ($settings_param['enablePoweredBy'] ?? false),
             defaultOutputLanguage: $defaultOutputLanguage,
+            reCaptchaChatTtlSeconds: $reCaptchaChatTtlSeconds,
         );
 
         // Frissített beállítások mentése

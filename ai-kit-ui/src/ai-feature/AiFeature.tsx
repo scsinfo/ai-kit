@@ -169,51 +169,54 @@ async function parseImageMetadataFromPromptResult(
         typeof parsed.alt === "string"
           ? outputLang && outputLang !== "en"
             ? (
-                await translate(
-                  {
-                    text: parsed.alt,
-                    sourceLanguage: "en",
-                    targetLanguage: outputLang,
-                  },
-                  featureOptions,
-                )
-              ).result
+              await translate(
+                {
+                  text: parsed.alt,
+                  sourceLanguage: "en",
+                  targetLanguage: outputLang,
+                },
+                featureOptions,
+              )
+            ).result
             : parsed.alt
           : "",
       title:
         typeof parsed.title === "string"
           ? outputLang && outputLang !== "en"
             ? (
-                await translate({
-                  text: parsed.title,
-                  sourceLanguage: "en",
-                  targetLanguage: outputLang,
-                })
-              ).result
+              await translate({
+                text: parsed.title,
+                sourceLanguage: "en",
+                targetLanguage: outputLang,
+              },
+                featureOptions)
+            ).result
             : parsed.title
           : "",
       caption:
         typeof parsed.caption === "string"
           ? outputLang && outputLang !== "en"
             ? (
-                await translate({
-                  text: parsed.caption,
-                  sourceLanguage: "en",
-                  targetLanguage: outputLang,
-                })
-              ).result
+              await translate({
+                text: parsed.caption,
+                sourceLanguage: "en",
+                targetLanguage: outputLang,
+              },
+                featureOptions)
+            ).result
             : parsed.caption
           : "",
       description:
         typeof parsed.description === "string"
           ? outputLang && outputLang !== "en"
             ? (
-                await translate({
-                  text: parsed.description,
-                  sourceLanguage: "en",
-                  targetLanguage: outputLang,
-                })
-              ).result
+              await translate({
+                text: parsed.description,
+                sourceLanguage: "en",
+                targetLanguage: outputLang,
+              },
+                featureOptions)
+            ).result
             : parsed.description
           : "",
     };
@@ -241,30 +244,30 @@ async function parsePostMetadataFromPromptResult(
         typeof parsed.title === "string"
           ? outputLang && outputLang !== "en"
             ? (
-                await translate(
-                  {
-                    text: parsed.title,
-                    sourceLanguage: "en",
-                    targetLanguage: outputLang,
-                  },
-                  featureOptions,
-                )
-              ).result
+              await translate(
+                {
+                  text: parsed.title,
+                  sourceLanguage: "en",
+                  targetLanguage: outputLang,
+                },
+                featureOptions,
+              )
+            ).result
             : parsed.title
           : "",
       excerpt:
         typeof parsed.excerpt === "string"
           ? outputLang && outputLang !== "en"
             ? (
-                await translate(
-                  {
-                    text: parsed.excerpt,
-                    sourceLanguage: "en",
-                    targetLanguage: outputLang,
-                  },
-                  featureOptions,
-                )
-              ).result
+              await translate(
+                {
+                  text: parsed.excerpt,
+                  sourceLanguage: "en",
+                  targetLanguage: outputLang,
+                },
+                featureOptions,
+              )
+            ).result
             : parsed.excerpt
           : "",
     };
@@ -303,6 +306,7 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
     default: defaults,
     onClose,
     onAccept,
+    onOptionsChanged,
     language,
     rootElement,
   } = props;
@@ -333,6 +337,7 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
     );
   }, [allowOverride]);
 
+  const [state, setState] = useState<string>();
   const [featureOpen, setFeatureOpen] = useState<boolean>(!showOpenButton);
   const [optionsOpen, setOptionsOpen] = useState<boolean>(false);
   const [backendConfigured, setBackendConfigured] = useState(false);
@@ -343,6 +348,7 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
   const [instructions, setInstructions] = useState<string | undefined>(
     defaults?.instructions,
   );
+  const [detectedLanguage, setDetectedLanguage] = useState<AiKitLanguageCode>();
   const [inputLanguage, setInputLanguage] = useState<
     AiKitLanguageCode | "auto" | undefined
   >(defaults?.inputLanguage);
@@ -396,7 +402,7 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
 
   const formatAiKitStatus = useCallback(
     (e: AiKitStatusEvent | null): string | null => {
-      if (!e) return null;
+      if (!e || e.silent) return null;
 
       const step = e.step;
       const msg = I18n.get((e.message ?? "").trim());
@@ -420,11 +426,23 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
         case "on-device:run":
           return msg || I18n.get("Generating...");
         case "backend:request":
-          return msg || I18n.get("Sending request to backend...");
         case "backend:waiting":
-          return msg || I18n.get("Waiting for backend response...");
         case "backend:response":
-          return msg || I18n.get("Received backend response.");
+          switch (mode) {
+            case "translate":
+              return I18n.get("Translating text");
+            case "rewrite":
+              return I18n.get("Rewriting text");
+            case "summarize":
+              return I18n.get("Summarizing");
+            case "proofread":
+              return I18n.get("Proofreading");
+            case "write":
+            case "generatePostMetadata":
+            case "generateImageMetadata":
+            default:
+              return I18n.get("Generating text");
+          }
         case "done":
           return msg || I18n.get("Done.");
         case "error":
@@ -433,7 +451,7 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
           return msg || I18n.get("Working...");
       }
     },
-    [language],
+    [language, mode],
   );
 
   const inputText = useMemo(() => {
@@ -449,7 +467,7 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
         return (
           Boolean(text && text.trim().length > 0) &&
           outputLanguage &&
-          inputLanguage !== outputLanguage
+          detectedLanguage !== outputLanguage
         );
       case "summarize":
       case "proofread":
@@ -460,10 +478,11 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
       default:
         return false;
     }
-  }, [inputText, mode, image, inputLanguage, outputLanguage]);
+  }, [inputText, mode, image, detectedLanguage, outputLanguage, featureOpen]);
 
   const ai = useAiRun();
-  const statusText = formatAiKitStatus(ai.statusEvent);
+  const statusText =
+    formatAiKitStatus(ai.statusEvent) ?? (state ? I18n.get(state) : null);
 
   const runGenerate = useCallback(
     async (modeOverride?: AiModePreference) => {
@@ -509,6 +528,7 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
             const res = await ai.run(async ({ signal, onStatus }) => {
               const expectedInputLanguages: AiKitLanguageCode[] = [];
               try {
+                setState("Detecting input language...");
                 const res = await detectLanguage(
                   { text: text!.trim() },
                   {
@@ -516,6 +536,7 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
                     context,
                     modeOverride,
                     onDeviceTimeoutOverride: onDeviceTimeout,
+                    silent: true,
                   },
                 );
                 const langCodes = res.result?.candidates
@@ -545,13 +566,17 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
             const res = await ai.run(async ({ signal, onStatus }) => {
               let inputLang = inputLanguage ?? "auto";
               if (inputLang === "auto") {
+                setState("Detecting input language...");
                 inputLang = await detectTopLanguage(text!.trim(), {
                   signal,
                   context,
                   modeOverride,
                   onDeviceTimeoutOverride: onDeviceTimeout,
+                  silent: true,
                 });
-                setInputLanguage(inputLang);
+                setDetectedLanguage(inputLang);
+              } else {
+                setDetectedLanguage(inputLang);
               }
               const outLang =
                 (outputLanguage && outputLanguage !== "auto"
@@ -589,11 +614,13 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
                   ? outputLanguage
                   : null) || readDefaultOutputLanguage();
               if (outputLanguage === "auto") {
+                setState("Detecting input language...");
                 outLang = await detectTopLanguage(text!.trim(), {
                   signal,
                   context,
                   modeOverride,
                   onDeviceTimeoutOverride: onDeviceTimeout,
+                  silent: true,
                 });
                 setOutputLanguage(outLang);
               }
@@ -637,12 +664,15 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
                 context,
                 modeOverride,
                 onDeviceTimeoutOverride: onDeviceTimeout,
+                silent: true,
               };
+              setState("Detecting input language...");
               const inLang = await detectTopLanguage(
                 text!.trim() + "\n" + (instructions?.trim() || ""),
                 langFeatureOptions,
               );
               if (inLang !== outLang && inLang !== "en") {
+                setState("Translating instructions...");
                 args.prompt = (
                   await translate(
                     {
@@ -727,6 +757,7 @@ Follow these additional instructions: ${instructions}`
                 ? outputLanguage
                 : null) || readDefaultOutputLanguage();
             try {
+              setState("Translating result...");
               const parsed = (await ai.run(async ({ signal }) => {
                 return await parsePostMetadataFromPromptResult(
                   cleaned,
@@ -736,6 +767,7 @@ Follow these additional instructions: ${instructions}`
                     context,
                     modeOverride,
                     onDeviceTimeoutOverride: onDeviceTimeout,
+                    silent: true,
                   },
                 );
               })) as string | null;
@@ -811,6 +843,7 @@ Follow these additional instructions: ${instructions}`
 
               const cleaned = stripCodeFence(res).trim();
               try {
+                setState("Translating result...");
                 const parsed = (await ai.run(async ({ signal }) => {
                   return await parseImageMetadataFromPromptResult(
                     cleaned,
@@ -820,6 +853,7 @@ Follow these additional instructions: ${instructions}`
                       context,
                       modeOverride,
                       onDeviceTimeoutOverride: onDeviceTimeout,
+                      silent: true,
                     },
                   );
                 })) as string | null;
@@ -840,6 +874,7 @@ Follow these additional instructions: ${instructions}`
             : I18n.get("An unknown error occurred."),
         );
       }
+      setState(undefined);
     },
     [
       language,
@@ -935,7 +970,7 @@ Follow these additional instructions: ${instructions}`
     if (ai.busy) {
       ai.cancel();
     }
-  }, [ai]);
+  }, [ai.busy]);
 
   useEffect(() => {
     if (
@@ -952,12 +987,24 @@ Follow these additional instructions: ${instructions}`
     queueMicrotask(() => {
       void runGenerate(modeOverride);
     });
-  }, [ai.busy, canGenerate, autoRun, generated, runGenerate, modeOverride]);
+  }, [
+    ai.busy,
+    autoRunOnceRef,
+    featureOpen,
+    canGenerate,
+    autoRun,
+    generated,
+    runGenerate,
+    modeOverride,
+  ]);
 
   useEffect(() => {
     if (!allowOverrideParameters) return;
     if (mode === "proofread") return;
-    if (!canGenerate) setOptionsOpen(true);
+    if (!canGenerate) {
+      setOptionsOpen(true);
+      autoRunOnceRef.current = true;
+    }
   }, [allowOverrideParameters, canGenerate, mode]);
 
   useEffect(() => {
@@ -994,8 +1041,8 @@ Follow these additional instructions: ${instructions}`
       )?.label;
       parts.push(
         I18n.get("Output language") +
-          ": " +
-          (lang ? I18n.get(lang) : outputLanguage),
+        ": " +
+        (lang ? I18n.get(lang) : outputLanguage),
       );
     }
     if (mode === "summarize" && type && allowOverride?.type) {
@@ -1200,14 +1247,18 @@ Follow these additional instructions: ${instructions}`
                                 description={
                                   optionsDisplay !== "horizontal"
                                     ? I18n.get(
-                                        "The topic or subject for the AI to write about.",
-                                      )
+                                      "The topic or subject for the AI to write about.",
+                                    )
                                     : undefined
                                 }
                                 value={text || ""}
                                 onChange={(
                                   e: React.ChangeEvent<HTMLInputElement>,
-                                ) => setText(e.target.value)}
+                                ) => {
+                                  const value = e.target.value;
+                                  setText(value);
+                                  onOptionsChanged?.({ text: value });
+                                }}
                               />
                             </Tooltip>
                           )}
@@ -1233,14 +1284,18 @@ Follow these additional instructions: ${instructions}`
                                   description={
                                     optionsDisplay !== "horizontal"
                                       ? I18n.get(
-                                          "Additional instructions to guide the AI.",
-                                        )
+                                        "Additional instructions to guide the AI.",
+                                      )
                                       : undefined
                                   }
                                   value={instructions || ""}
                                   onChange={(
                                     e: React.ChangeEvent<HTMLInputElement>,
-                                  ) => setInstructions(e.target.value)}
+                                  ) => {
+                                    const value = e.target.value;
+                                    setInstructions(value);
+                                    onOptionsChanged?.({ instructions: value });
+                                  }}
                                 />
                               </Tooltip>
                             )}
@@ -1262,8 +1317,8 @@ Follow these additional instructions: ${instructions}`
                                 description={
                                   optionsDisplay !== "horizontal"
                                     ? I18n.get(
-                                        "The language of the input text.",
-                                      )
+                                      "The language of the input text.",
+                                    )
                                     : undefined
                                 }
                                 data={[
@@ -1279,9 +1334,11 @@ Follow these additional instructions: ${instructions}`
                                   ),
                                 ]}
                                 value={inputLanguage || "auto"}
-                                onChange={(value) =>
-                                  setInputLanguage(value as AiKitLanguageCode)
-                                }
+                                onChange={(value) => {
+                                  const val = value as AiKitLanguageCode;
+                                  setInputLanguage(val);
+                                  onOptionsChanged?.({ inputLanguage: val });
+                                }}
                               />
                             </Tooltip>
                           )}
@@ -1303,17 +1360,17 @@ Follow these additional instructions: ${instructions}`
                                 description={
                                   optionsDisplay !== "horizontal"
                                     ? I18n.get(
-                                        "The language AI-Kit should use for generated text by default (when applicable).",
-                                      )
+                                      "The language AI-Kit should use for generated text by default (when applicable).",
+                                    )
                                     : undefined
                                 }
                                 data={[
                                   ...([
                                     mode === "rewrite"
                                       ? {
-                                          value: "auto",
-                                          label: I18n.get("Auto-detect"),
-                                        }
+                                        value: "auto",
+                                        label: I18n.get("Auto-detect"),
+                                      }
                                       : undefined,
                                   ].filter(Boolean) as {
                                     value: string;
@@ -1331,9 +1388,11 @@ Follow these additional instructions: ${instructions}`
                                   aiKit.settings.defaultOutputLanguage ||
                                   (mode === "rewrite" ? "auto" : "")
                                 }
-                                onChange={(value) =>
-                                  setOutputLanguage(value as AiKitLanguageCode)
-                                }
+                                onChange={(value) => {
+                                  const val = value as AiKitLanguageCode;
+                                  setOutputLanguage(val);
+                                  onOptionsChanged?.({ outputLanguage: val });
+                                }}
                               />
                             </Tooltip>
                           )}
@@ -1374,9 +1433,11 @@ Follow these additional instructions: ${instructions}`
                                   },
                                 ]}
                                 value={type || "key-points"}
-                                onChange={(value) =>
-                                  setType(value as SummarizerType)
-                                }
+                                onChange={(value) => {
+                                  const val = value as SummarizerType;
+                                  setType(val);
+                                  onOptionsChanged?.({ type: val });
+                                }}
                               />
                             </Tooltip>
                           )}
@@ -1399,48 +1460,52 @@ Follow these additional instructions: ${instructions}`
                                   description={
                                     optionsDisplay !== "horizontal"
                                       ? I18n.get(
-                                          "The tone or style for the AI to use.",
-                                        )
+                                        "The tone or style for the AI to use.",
+                                      )
                                       : undefined
                                   }
                                   data={
                                     mode === "write"
                                       ? [
-                                          {
-                                            value: "neutral",
-                                            label: I18n.get("Neutral"),
-                                          },
-                                          {
-                                            value: "formal",
-                                            label: I18n.get("Formal"),
-                                          },
-                                          {
-                                            value: "casual",
-                                            label: I18n.get("Casual"),
-                                          },
-                                        ]
+                                        {
+                                          value: "neutral",
+                                          label: I18n.get("Neutral"),
+                                        },
+                                        {
+                                          value: "formal",
+                                          label: I18n.get("Formal"),
+                                        },
+                                        {
+                                          value: "casual",
+                                          label: I18n.get("Casual"),
+                                        },
+                                      ]
                                       : [
-                                          {
-                                            value: "as-is",
-                                            label: I18n.get("As-Is"),
-                                          },
-                                          {
-                                            value: "more-formal",
-                                            label: I18n.get("More formal"),
-                                          },
-                                          {
-                                            value: "more-casual",
-                                            label: I18n.get("More casual"),
-                                          },
-                                        ]
+                                        {
+                                          value: "as-is",
+                                          label: I18n.get("As-Is"),
+                                        },
+                                        {
+                                          value: "more-formal",
+                                          label: I18n.get("More formal"),
+                                        },
+                                        {
+                                          value: "more-casual",
+                                          label: I18n.get("More casual"),
+                                        },
+                                      ]
                                   }
                                   value={
                                     tone ||
                                     (mode === "write" ? "neutral" : "as-is")
                                   }
-                                  onChange={(value) =>
-                                    setTone(value as WriterTone | RewriterTone)
-                                  }
+                                  onChange={(value) => {
+                                    const val = value as
+                                      | WriterTone
+                                      | RewriterTone;
+                                    setTone(val);
+                                    onOptionsChanged?.({ tone: val });
+                                  }}
                                 />
                               </Tooltip>
                             )}
@@ -1468,46 +1533,46 @@ Follow these additional instructions: ${instructions}`
                                   data={
                                     mode === "write" || mode === "summarize"
                                       ? [
-                                          {
-                                            value: "short",
-                                            label: I18n.get("Short"),
-                                          },
-                                          {
-                                            value: "medium",
-                                            label: I18n.get("Medium"),
-                                          },
-                                          {
-                                            value: "long",
-                                            label: I18n.get("Long"),
-                                          },
-                                        ]
+                                        {
+                                          value: "short",
+                                          label: I18n.get("Short"),
+                                        },
+                                        {
+                                          value: "medium",
+                                          label: I18n.get("Medium"),
+                                        },
+                                        {
+                                          value: "long",
+                                          label: I18n.get("Long"),
+                                        },
+                                      ]
                                       : [
-                                          {
-                                            value: "as-is",
-                                            label: I18n.get("As-Is"),
-                                          },
-                                          {
-                                            value: "shorter",
-                                            label: I18n.get("Shorter"),
-                                          },
-                                          {
-                                            value: "longer",
-                                            label: I18n.get("Longer"),
-                                          },
-                                        ]
+                                        {
+                                          value: "as-is",
+                                          label: I18n.get("As-Is"),
+                                        },
+                                        {
+                                          value: "shorter",
+                                          label: I18n.get("Shorter"),
+                                        },
+                                        {
+                                          value: "longer",
+                                          label: I18n.get("Longer"),
+                                        },
+                                      ]
                                   }
                                   value={
                                     length ||
                                     (mode === "rewrite" ? "as-is" : "short")
                                   }
-                                  onChange={(value) =>
-                                    setLength(
-                                      value as
-                                        | WriterLength
-                                        | RewriterLength
-                                        | SummarizerLength,
-                                    )
-                                  }
+                                  onChange={(value) => {
+                                    const val = value as
+                                      | WriterLength
+                                      | RewriterLength
+                                      | SummarizerLength;
+                                    setLength(val);
+                                    onOptionsChanged?.({ length: val });
+                                  }}
                                 />
                               </Tooltip>
                             )}
@@ -1532,8 +1597,8 @@ Follow these additional instructions: ${instructions}`
                                     description={
                                       optionsDisplay !== "horizontal"
                                         ? I18n.get(
-                                            "The format for the generated output.",
-                                          )
+                                          "The format for the generated output.",
+                                        )
                                         : undefined
                                     }
                                     data={[
@@ -1551,14 +1616,14 @@ Follow these additional instructions: ${instructions}`
                                       },
                                     ]}
                                     value={outputFormat || "markdown"}
-                                    onChange={(value) =>
-                                      setOutputFormat(
-                                        value as
-                                          | "plain-text"
-                                          | "markdown"
-                                          | "html",
-                                      )
-                                    }
+                                    onChange={(value) => {
+                                      const val = value as
+                                        | "plain-text"
+                                        | "markdown"
+                                        | "html";
+                                      setOutputFormat(val);
+                                      onOptionsChanged?.({ outputFormat: val });
+                                    }}
                                   />
                                 </Tooltip>
                               ))}
@@ -1594,7 +1659,7 @@ Follow these additional instructions: ${instructions}`
                     <Stack mt="md">
                       {mode === "proofread" &&
                         ((generated as ProofreadResult).corrections.length ===
-                        0 ? (
+                          0 ? (
                           <Alert color="green">
                             {I18n.get(
                               "No issues found. Your text looks great!",
@@ -1813,7 +1878,7 @@ Follow these additional instructions: ${instructions}`
                         !generated ||
                         (mode === "proofread" &&
                           (generated as ProofreadResult).corrections.length ===
-                            0)
+                          0)
                       }
                       onClick={async () => {
                         onAccept(

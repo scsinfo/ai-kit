@@ -1,5 +1,5 @@
 import * as _smart_cloud_ai_kit_core from '@smart-cloud/ai-kit-core';
-import { AiModePreference, AiKitLanguageCode, HistoryStorageMode, AiChatbotLabels, AiKitStatusEvent, AiWorkerProps } from '@smart-cloud/ai-kit-core';
+import { AiModePreference, HistoryStorageMode, AiChatbotLabels, AiKitStatusEvent, AiKitLanguageCode, AiWorkerProps } from '@smart-cloud/ai-kit-core';
 import * as React from 'react';
 import React__default, { FC, ComponentType } from 'react';
 
@@ -13,17 +13,9 @@ declare const AiFeature: FC<_smart_cloud_ai_kit_core.AiWorkerProps & {
     acceptButtonTitle?: string;
     showRegenerateOnBackendButton?: boolean;
     optionsDisplay?: "collapse" | "horizontal" | "vertical";
-    default?: {
+    default?: _smart_cloud_ai_kit_core.AiFeatureOptions & {
         getText?: () => string;
-        text?: string;
         image?: Blob;
-        instructions?: string;
-        inputLanguage?: AiKitLanguageCode | "auto";
-        outputLanguage?: AiKitLanguageCode | "auto";
-        tone?: WriterTone | RewriterTone;
-        length?: WriterLength | RewriterLength | SummarizerLength;
-        type?: SummarizerType;
-        outputFormat?: "plain-text" | "markdown" | "html";
     };
     allowOverride?: {
         text?: boolean;
@@ -35,6 +27,7 @@ declare const AiFeature: FC<_smart_cloud_ai_kit_core.AiWorkerProps & {
         outputFormat?: boolean;
     };
     onAccept?: (result: unknown) => void;
+    onOptionsChanged?: (options: _smart_cloud_ai_kit_core.AiFeatureOptions) => void;
 } & Partial<_smart_cloud_ai_kit_core.AiWorkerProps>>;
 
 declare const markdownToHtml: (markdown: string) => Promise<string>;

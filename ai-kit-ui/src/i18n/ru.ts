@@ -13,6 +13,7 @@ export const ruDict: Record<string, string> = {
   "Ask anything…": "Спросите что угодно…",
   "Ask me": "Спросите меня",
   Assistant: "Ассистент",
+  "Assistant is thinking...": "Ассистент размышляет...",
   "Auto-detect": "Автоматическое определение",
   Cancel: "Отмена",
   Caption: "Подпись",

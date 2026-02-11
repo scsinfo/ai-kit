@@ -13,6 +13,7 @@ export const deDict: Record<string, string> = {
   "Ask anything…": "Frag mich alles…",
   "Ask me": "Frag mich",
   Assistant: "Assistent",
+  "Assistant is thinking...": "Der Assistent denkt nach...",
   "Auto-detect": "Automatisch erkennen",
   Cancel: "Abbrechen",
   Caption: "Bildunterschrift",

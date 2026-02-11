@@ -13,6 +13,7 @@ export const svDict: Record<string, string> = {
   "Ask anything…": "Fråga vad som helst…",
   "Ask me": "Fråga mig",
   Assistant: "Assistent",
+  "Assistant is thinking...": "Assistenten funderar...",
   "Auto-detect": "Automatisk identifiering",
   Cancel: "Avboka",
   Caption: "Rubrik",

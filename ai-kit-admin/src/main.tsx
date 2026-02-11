@@ -7,6 +7,7 @@ import {
   Checkbox,
   DEFAULT_THEME,
   Group,
+  NumberInput,
   Select,
   Stack,
   Switch,
@@ -195,7 +196,7 @@ interface NavigationOption {
 
 interface MainProps {
   nonce: string;
-  settings: AiKitSettings;
+  settings: AiKitSettings & { reCaptchaChatTtlSeconds?: number };
   store: Store;
 }
 
@@ -228,12 +229,15 @@ const Main = (props: MainProps) => {
 
   const [site, setSite] = useState<Site | null>();
 
-  const [settingsFormData, setSettingsFormData] = useState<AiKitSettings>({
+  const [settingsFormData, setSettingsFormData] = useState<
+    AiKitSettings & { reCaptchaChatTtlSeconds?: number }
+  >({
     sharedContext: settings?.sharedContext || "",
     defaultOutputLanguage: settings?.defaultOutputLanguage || "en",
     reCaptchaSiteKey: settings?.reCaptchaSiteKey || "",
     useRecaptchaEnterprise: settings?.useRecaptchaEnterprise || false,
     useRecaptchaNet: settings?.useRecaptchaNet || false,
+    reCaptchaChatTtlSeconds: settings?.reCaptchaChatTtlSeconds ?? 120,
     enablePoweredBy: settings?.enablePoweredBy || false,
   });
 
@@ -790,6 +794,31 @@ const Main = (props: MainProps) => {
                     setSettingsFormData({
                       ...settingsFormData,
                       useRecaptchaNet: e.currentTarget.checked,
+                    })
+                  }
+                />
+                <NumberInput
+                  disabled={savingSettings}
+                  label={
+                    <InfoLabelComponent
+                      text="reCAPTCHA chat verification window (seconds)"
+                      scrollToId="recaptcha-chat-ttl-seconds"
+                    />
+                  }
+                  description={
+                    "After a successful reCAPTCHA verification, AI-Kit will skip requesting and verifying reCAPTCHA tokens for this many seconds in multi-turn chats. Set to 0 to disable."
+                  }
+                  min={0}
+                  max={3600}
+                  clampBehavior="strict"
+                  value={settingsFormData.reCaptchaChatTtlSeconds ?? 120}
+                  onChange={(value) =>
+                    setSettingsFormData({
+                      ...settingsFormData,
+                      reCaptchaChatTtlSeconds:
+                        typeof value === "number" && !Number.isNaN(value)
+                          ? value
+                          : 120,
                     })
                   }
                 />

@@ -13,6 +13,7 @@ export const jaDict: Record<string, string> = {
   "Ask anything…": "何でも聞いて…",
   "Ask me": "質問する",
   Assistant: "アシスタント",
+  "Assistant is thinking...": "アシスタントは考えています...",
   "Auto-detect": "自動検出",
   Cancel: "キャンセル",
   Caption: "キャプション",

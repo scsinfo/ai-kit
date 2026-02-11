@@ -13,6 +13,7 @@ export const huDict: Record<string, string> = {
   "Ask anything…": "Kérdezz bármit…",
   "Ask me": "Kérdezz tőlem",
   Assistant: "Asszisztens",
+  "Assistant is thinking...": "Az asszisztens gondolkodik...",
   "Auto-detect": "Automatikus felismerés",
   Cancel: "Mégse",
   Caption: "Felirat",

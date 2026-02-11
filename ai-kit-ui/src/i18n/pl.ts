@@ -13,6 +13,7 @@ export const plDict: Record<string, string> = {
   "Ask anything…": "Zapytaj o cokolwiek…",
   "Ask me": "Zapytaj mnie",
   Assistant: "Asystent",
+  "Assistant is thinking...": "Asystent myśli...",
   "Auto-detect": "Automatyczne wykrywanie",
   Cancel: "Anulować",
   Caption: "Podpis",

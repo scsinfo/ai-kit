@@ -13,6 +13,7 @@ export const heDict: Record<string, string> = {
   "Ask anything…": "שאל כל דבר…",
   "Ask me": "שאל אותי",
   Assistant: "עוזר",
+  "Assistant is thinking...": "העוזר חושב...",
   "Auto-detect": "זיהוי אוטומטי",
   Cancel: "לְבַטֵל",
   Caption: "כּוֹתֶרֶת",

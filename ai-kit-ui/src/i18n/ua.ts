@@ -13,6 +13,7 @@ export const uaDict: Record<string, string> = {
   "Ask anything…": "Запитайте будь-що…",
   "Ask me": "Запитайте мене",
   Assistant: "Асистент",
+  "Assistant is thinking...": "Асистент думає...",
   "Auto-detect": "Автоматичне визначення",
   Cancel: "Скасувати",
   Caption: "Підпис",

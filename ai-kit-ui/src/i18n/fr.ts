@@ -13,6 +13,7 @@ export const frDict: Record<string, string> = {
   "Ask anything…": "Demandez n’importe quoi…",
   "Ask me": "Demandez-moi",
   Assistant: "Assistant",
+  "Assistant is thinking...": "L'assistant réfléchit...",
   "Auto-detect": "Détection automatique",
   Cancel: "Annuler",
   Caption: "Légende",

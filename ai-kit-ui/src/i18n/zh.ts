@@ -12,6 +12,7 @@ export const zhDict: Record<string, string> = {
   "Ask anything…": "随便问…",
   "Ask me": "问我",
   Assistant: "助手",
+  "Assistant is thinking...": "助手正在思考……",
   "Auto-detect": "自动检测",
   Cancel: "取消",
   Caption: "标题",

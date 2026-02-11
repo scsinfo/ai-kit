@@ -13,6 +13,7 @@ export const hiDict: Record<string, string> = {
   "Ask anything…": "कुछ भी पूछें…",
   "Ask me": "मुझसे पूछें",
   Assistant: "सहायक",
+  "Assistant is thinking...": "सहायक सोच रहा है...",
   "Auto-detect": "ऑटो का पता लगाने",
   Cancel: "रद्द करना",
   Caption: "कैप्शन",

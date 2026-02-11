@@ -69,6 +69,9 @@ export interface AiKitSettings {
   useRecaptchaNet?: boolean;
   useRecaptchaEnterprise?: boolean;
 
+  /** Chat optimization: number of seconds a successful reCAPTCHA assessment remains valid for the current chat session. */
+  reCaptchaChatTtlSeconds?: number;
+
   /** Whether to show "Powered by WPSuite AI-Kit" branding in UIs. */
   enablePoweredBy?: boolean;
 }
@@ -179,6 +182,8 @@ export interface AiKitStatusEvent {
   total?: number;
 
   message?: string;
+
+  silent?: boolean; // whether this event should be ignored for user-facing status updates
 }
 
 export class BackendError extends Error {
@@ -250,6 +255,7 @@ export type AiChatbotLabels = Partial<{
 
   userLabel: string;
   assistantLabel: string;
+  assistantThinkingLabel: string;
 
   askMeLabel: string; // fallback for open button (if openButtonTitle not provided)
 
@@ -325,6 +331,17 @@ export type AiChatbotProps = AiWorkerProps & {
   openButtonPosition?: OpenButtonPosition; // default: "bottom-right"
 };
 
+export type AiFeatureOptions = {
+  text?: string;
+  instructions?: string;
+  inputLanguage?: AiKitLanguageCode | "auto";
+  outputLanguage?: AiKitLanguageCode | "auto";
+  tone?: WriterTone | RewriterTone;
+  length?: WriterLength | RewriterLength | SummarizerLength;
+  type?: SummarizerType;
+  outputFormat?: "plain-text" | "markdown" | "html";
+};
+
 export type AiFeatureProps = AiWorkerProps & {
   mode: AiFeatureMode;
   context?: ContextKind;
@@ -335,17 +352,9 @@ export type AiFeatureProps = AiWorkerProps & {
   acceptButtonTitle?: string;
   showRegenerateOnBackendButton?: boolean;
   optionsDisplay?: "collapse" | "horizontal" | "vertical";
-  default?: {
+  default?: AiFeatureOptions & {
     getText?: () => string;
-    text?: string;
     image?: Blob;
-    instructions?: string;
-    inputLanguage?: AiKitLanguageCode | "auto";
-    outputLanguage?: AiKitLanguageCode | "auto";
-    tone?: WriterTone | RewriterTone;
-    length?: WriterLength | RewriterLength | SummarizerLength;
-    type?: SummarizerType;
-    outputFormat?: "plain-text" | "markdown" | "html";
   };
   allowOverride?: {
     text?: boolean;
@@ -357,6 +366,7 @@ export type AiFeatureProps = AiWorkerProps & {
     outputFormat?: boolean;
   };
   onAccept?: (result: unknown) => void;
+  onOptionsChanged?: (options: AiFeatureOptions) => void;
 };
 
 /* -----------------------------
@@ -586,6 +596,7 @@ export type FeatureOptions = BackendCallOptions & {
   context?: ContextKind;
   modeOverride?: AiModePreference;
   onDeviceTimeoutOverride?: number;
+  silent?: boolean; // whether to suppress user-facing status updates for this call
 };
 
 export interface Features {

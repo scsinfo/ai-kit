@@ -13,6 +13,7 @@ export const koDict: Record<string, string> = {
   "Ask anything…": "무엇이든 물어보세요…",
   "Ask me": "질문하기",
   Assistant: "어시스턴트",
+  "Assistant is thinking...": "비서가 생각 중입니다...",
   "Auto-detect": "자동 감지",
   Cancel: "취소",
   Caption: "표제",

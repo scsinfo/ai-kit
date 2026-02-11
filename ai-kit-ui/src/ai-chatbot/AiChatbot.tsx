@@ -69,6 +69,7 @@ export const DEFAULT_CHATBOT_LABELS: Required<AiChatbotLabels> = {
 
   userLabel: "User",
   assistantLabel: "Assistant",
+  assistantThinkingLabel: "Assistant is thinking...",
 
   askMeLabel: "Ask me",
 
@@ -179,7 +180,10 @@ const isAbortLike = (e: Error & { code?: string }) => {
   );
 };
 
-const formatStatusEvent = (event?: AiKitStatusEvent | null): string | null => {
+const formatStatusEvent = (
+  event: AiKitStatusEvent | null,
+  labels: AiChatbotLabels,
+): string | null => {
   if (!event) return null;
 
   const step = event.step;
@@ -201,11 +205,12 @@ const formatStatusEvent = (event?: AiKitStatusEvent | null): string | null => {
     case "on-device:run":
       return msg || I18n.get("Running on-device...");
     case "backend:request":
-      return msg || I18n.get("Sending request to server...");
     case "backend:waiting":
-      return msg || I18n.get("Waiting for response...");
     case "backend:response":
-      return msg || I18n.get("Receiving response...");
+      return I18n.get(
+        labels.assistantThinkingLabel ??
+          DEFAULT_CHATBOT_LABELS.assistantThinkingLabel,
+      );
     case "done":
       return msg || I18n.get("Done.");
     case "error":
@@ -525,8 +530,8 @@ const AiChatbotBase: FC<AiChatbotProps & AiKitShellInjectedProps> = (props) => {
 
   const statusText = useMemo(() => {
     if (!ai.busy) return null;
-    return formatStatusEvent(ai.statusEvent) || I18n.get("Working…");
-  }, [ai.busy, ai.statusEvent, language]);
+    return formatStatusEvent(ai.statusEvent, labels) || I18n.get("Working…");
+  }, [ai.busy, ai.statusEvent, language, labels]);
 
   const lastCanceledUserMessageId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {

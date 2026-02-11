@@ -13,6 +13,7 @@ export const nlDict: Record<string, string> = {
   "Ask anything…": "Vraag maar raak…",
   "Ask me": "Vraag me",
   Assistant: "Assistent",
+  "Assistant is thinking...": "De assistent denkt na...",
   "Auto-detect": "Automatische detectie",
   Cancel: "Annuleren",
   Caption: "Ondertiteling",

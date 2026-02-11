@@ -13,6 +13,7 @@ export const esDict: Record<string, string> = {
   "Ask anything…": "Pregunta lo que sea…",
   "Ask me": "Pregúntame",
   Assistant: "Asistente",
+  "Assistant is thinking...": "El asistente está pensando...",
   "Auto-detect": "Detección automática",
   Cancel: "Cancelar",
   Caption: "Subtítulo",

@@ -13,6 +13,7 @@ export const arDict: Record<string, string> = {
   "Ask anything…": "اسأل أي شيء…",
   "Ask me": "اسألني",
   Assistant: "المساعد",
+  "Assistant is thinking...": "المساعد يفكر...",
   "Auto-detect": "الكشف التلقائي",
   Cancel: "يلغي",
   Caption: "التسمية التوضيحية",

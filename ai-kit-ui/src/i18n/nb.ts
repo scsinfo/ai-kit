@@ -13,6 +13,7 @@ export const nbDict: Record<string, string> = {
   "Ask anything…": "Spør om hva som helst…",
   "Ask me": "Spør meg",
   Assistant: "Assistent",
+  "Assistant is thinking...": "Assistenten tenker...",
   "Auto-detect": "Automatisk oppdaging",
   Cancel: "Kansellere",
   Caption: "Tekst",

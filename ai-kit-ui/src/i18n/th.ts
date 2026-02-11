@@ -13,6 +13,7 @@ export const thDict: Record<string, string> = {
   "Ask anything…": "ถามอะไรก็ได้…",
   "Ask me": "ถามฉัน",
   Assistant: "ผู้ช่วย",
+  "Assistant is thinking...": "ผู้ช่วยกำลังคิด...",
   "Auto-detect": "ตรวจจับอัตโนมัติ",
   Cancel: "ยกเลิก",
   Caption: "คำบรรยายภาพ",

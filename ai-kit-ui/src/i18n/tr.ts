@@ -13,6 +13,7 @@ export const trDict: Record<string, string> = {
   "Ask anything…": "Her şeyi sor…",
   "Ask me": "Bana sor",
   Assistant: "Asistan",
+  "Assistant is thinking...": "Asistan düşünüyor...",
   "Auto-detect": "Otomatik algılama",
   Cancel: "İptal etmek",
   Caption: "Altyazı",

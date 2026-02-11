@@ -13,6 +13,7 @@ export const idDict: Record<string, string> = {
   "Ask anything…": "Tanyakan apa saja…",
   "Ask me": "Tanya saya",
   Assistant: "Asisten",
+  "Assistant is thinking...": "Asisten sedang berpikir...",
   "Auto-detect": "Deteksi otomatis",
   Cancel: "Membatalkan",
   Caption: "Keterangan",

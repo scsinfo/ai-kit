@@ -99,6 +99,8 @@ interface AiKitSettings {
     reCaptchaSiteKey?: string;
     useRecaptchaNet?: boolean;
     useRecaptchaEnterprise?: boolean;
+    /** Chat optimization: number of seconds a successful reCAPTCHA assessment remains valid for the current chat session. */
+    reCaptchaChatTtlSeconds?: number;
     /** Whether to show "Powered by WPSuite AI-Kit" branding in UIs. */
     enablePoweredBy?: boolean;
 }
@@ -147,6 +149,7 @@ interface AiKitStatusEvent {
     loaded?: number;
     total?: number;
     message?: string;
+    silent?: boolean;
 }
 declare class BackendError extends Error {
     readonly decision?: CapabilityDecision | undefined;
@@ -190,6 +193,7 @@ type AiChatbotLabels = Partial<{
     modalTitle: string;
     userLabel: string;
     assistantLabel: string;
+    assistantThinkingLabel: string;
     askMeLabel: string;
     sendLabel: string;
     cancelLabel: string;
@@ -246,6 +250,16 @@ type AiChatbotProps = AiWorkerProps & {
      */
     openButtonPosition?: OpenButtonPosition;
 };
+type AiFeatureOptions = {
+    text?: string;
+    instructions?: string;
+    inputLanguage?: AiKitLanguageCode | "auto";
+    outputLanguage?: AiKitLanguageCode | "auto";
+    tone?: WriterTone | RewriterTone;
+    length?: WriterLength | RewriterLength | SummarizerLength;
+    type?: SummarizerType;
+    outputFormat?: "plain-text" | "markdown" | "html";
+};
 type AiFeatureProps = AiWorkerProps & {
     mode: AiFeatureMode;
     context?: ContextKind;
@@ -256,17 +270,9 @@ type AiFeatureProps = AiWorkerProps & {
     acceptButtonTitle?: string;
     showRegenerateOnBackendButton?: boolean;
     optionsDisplay?: "collapse" | "horizontal" | "vertical";
-    default?: {
+    default?: AiFeatureOptions & {
         getText?: () => string;
-        text?: string;
         image?: Blob;
-        instructions?: string;
-        inputLanguage?: AiKitLanguageCode | "auto";
-        outputLanguage?: AiKitLanguageCode | "auto";
-        tone?: WriterTone | RewriterTone;
-        length?: WriterLength | RewriterLength | SummarizerLength;
-        type?: SummarizerType;
-        outputFormat?: "plain-text" | "markdown" | "html";
     };
     allowOverride?: {
         text?: boolean;
@@ -278,6 +284,7 @@ type AiFeatureProps = AiWorkerProps & {
         outputFormat?: boolean;
     };
     onAccept?: (result: unknown) => void;
+    onOptionsChanged?: (options: AiFeatureOptions) => void;
 };
 interface SummarizeArgs {
     text: string;
@@ -424,6 +431,7 @@ type FeatureOptions = BackendCallOptions & {
     context?: ContextKind;
     modeOverride?: AiModePreference;
     onDeviceTimeoutOverride?: number;
+    silent?: boolean;
 };
 interface Features {
     getWriteOptions: (args: Partial<WriteArgs>) => Promise<WriterCreateCoreOptions>;
@@ -480,4 +488,4 @@ declare const sendChatMessage: (...args: Parameters<Features["sendChatMessage"]>
 declare const sendFeedbackMessage: (...args: Parameters<Features["sendFeedbackMessage"]>) => Promise<PromptResult>;
 declare const initializeAiKit: (renderFeature: (args: AiFeatureArgs) => Promise<AiWorkerHandle>) => AiKitPlugin;
 
-export { type AiChatbotLabels, type AiChatbotProps, type AiFeatureArgs, type AiFeatureMode, type AiFeatureProps, type AiKit, AiKitChatbotIcon, type AiKitConfig, type AiKitErrorEvent, AiKitFeatureIcon, type AiKitFeatures, type AiKitLanguageCode, type AiKitLanguageProfile, type AiKitLanguageRef, type AiKitPlugin, type AiKitReadyEvent, type AiKitSettings, type AiKitStatusEvent, type AiKitStatusStep, type AiModePreference, type AiWorkerHandle, type AiWorkerProps, type AnyCreateCoreOptions, type Backend, type BackendCallOptions, BackendError, type BackendTransport, type BuiltInAiFeature, type Capabilities, type CapabilityDecision, type CapabilitySource, type ChatMessageArgs, type ContextKind, type CustomTranslations, type DetectLanguageArgs, type DetectLanguageOutput, type DeviceAvailability, type FeatureOptions, type Features, type FeedbackMessageArgs, type HistoryStorageMode, LANGUAGE_OPTIONS, type OnDeviceUnsupportedLanguageStrategy, type OpenButtonIconLayout, type OpenButtonPosition, type PromptArgs, type PromptImageInput, type PromptMessages, type PromptResult, type ProofreadArgs, type ProofreadOutput, type RewriteArgs, type RewriteResult, type State, type Store, type SummarizeArgs, type SummarizeResult, TEXT_DOMAIN, type TranslateArgs, type TranslateResult, type WriteArgs, type WriteResult, checkOnDeviceAvailability, decideCapability, detectLanguage, dispatchBackend, getAiKitPlugin, getMinChromeVersions, getPromptOptions, getProofreadOptions, getRewriteOptions, getStore, getStoreDispatch, getStoreSelect, getSummarizeOptions, getTranslateOptions, getWriteOptions, initializeAiKit, observeStore, prompt, proofread, rewrite, sanitizeAiKitConfig, sendChatMessage, sendFeedbackMessage, summarize, translate, waitForAiKitReady, write };
+export { type AiChatbotLabels, type AiChatbotProps, type AiFeatureArgs, type AiFeatureMode, type AiFeatureOptions, type AiFeatureProps, type AiKit, AiKitChatbotIcon, type AiKitConfig, type AiKitErrorEvent, AiKitFeatureIcon, type AiKitFeatures, type AiKitLanguageCode, type AiKitLanguageProfile, type AiKitLanguageRef, type AiKitPlugin, type AiKitReadyEvent, type AiKitSettings, type AiKitStatusEvent, type AiKitStatusStep, type AiModePreference, type AiWorkerHandle, type AiWorkerProps, type AnyCreateCoreOptions, type Backend, type BackendCallOptions, BackendError, type BackendTransport, type BuiltInAiFeature, type Capabilities, type CapabilityDecision, type CapabilitySource, type ChatMessageArgs, type ContextKind, type CustomTranslations, type DetectLanguageArgs, type DetectLanguageOutput, type DeviceAvailability, type FeatureOptions, type Features, type FeedbackMessageArgs, type HistoryStorageMode, LANGUAGE_OPTIONS, type OnDeviceUnsupportedLanguageStrategy, type OpenButtonIconLayout, type OpenButtonPosition, type PromptArgs, type PromptImageInput, type PromptMessages, type PromptResult, type ProofreadArgs, type ProofreadOutput, type RewriteArgs, type RewriteResult, type State, type Store, type SummarizeArgs, type SummarizeResult, TEXT_DOMAIN, type TranslateArgs, type TranslateResult, type WriteArgs, type WriteResult, checkOnDeviceAvailability, decideCapability, detectLanguage, dispatchBackend, getAiKitPlugin, getMinChromeVersions, getPromptOptions, getProofreadOptions, getRewriteOptions, getStore, getStoreDispatch, getStoreSelect, getSummarizeOptions, getTranslateOptions, getWriteOptions, initializeAiKit, observeStore, prompt, proofread, rewrite, sanitizeAiKitConfig, sendChatMessage, sendFeedbackMessage, summarize, translate, waitForAiKitReady, write };

@@ -13,6 +13,7 @@ export const ptDict: Record<string, string> = {
   "Ask anything…": "Pergunte qualquer coisa…",
   "Ask me": "Pergunte-me",
   Assistant: "Assistente",
+  "Assistant is thinking...": "O assistente está pensando...",
   "Auto-detect": "Detecção automática",
   Cancel: "Cancelar",
   Caption: "Rubrica",
