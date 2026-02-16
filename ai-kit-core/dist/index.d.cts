@@ -78,7 +78,9 @@ interface AiKitFeatures {
     readonly prompt: Features["prompt"];
     readonly sendChatMessage: Features["sendChatMessage"];
     readonly sendFeedbackMessage: Features["sendFeedbackMessage"];
+    readonly sendSearchMessage: Features["sendSearchMessage"];
     readonly renderFeature: (args: AiFeatureArgs) => Promise<AiWorkerHandle>;
+    readonly renderSearchComponent: (args: DocSearchArgs) => Promise<AiWorkerHandle>;
 }
 interface AiKitSettings {
     /**
@@ -393,6 +395,58 @@ interface PromptResult {
         messageId: string;
     };
 }
+interface RetrievedDoc {
+    docId: string;
+    title?: string;
+    description?: string;
+    author?: string;
+    sourceUrl?: string;
+}
+interface RetrievedChunk {
+    docId: string;
+    chunkId: string;
+    snippet?: string;
+}
+interface ProcessedCitations {
+    docs: Array<RetrievedDoc>;
+    chunks: Array<RetrievedChunk>;
+    anchors?: Array<{
+        span: {
+            start: number;
+            end: number;
+        };
+        chunkIds: Array<string>;
+    }>;
+}
+interface SearchResult {
+    result: string;
+    sessionId?: string;
+    citations?: ProcessedCitations;
+    metadata?: {
+        modelId?: string;
+        requestId?: string;
+        inputTokens?: number;
+        outputTokens?: number;
+        usedKB?: boolean;
+        kbId?: string;
+        citationCount?: number;
+        fallbackReason?: string;
+    };
+}
+interface SearchMessageArgs {
+    /** Search query in the user's language. */
+    query: string;
+    /** Optional backend session for future optimizations. */
+    sessionId?: string;
+    /** Optional shared context (defaults to AiKit settings sharedContext). */
+    sharedContext?: string;
+    knowledgeBaseId?: string;
+    /**
+     * Optional on-device tuning:
+     */
+    topK?: number;
+    temperature?: number;
+}
 interface ChatMessageArgs {
     sessionId?: string;
     message?: string;
@@ -409,6 +463,29 @@ interface FeedbackMessageArgs {
     feedbackMessageId: string;
     sessionId: string;
 }
+type DocSearchProps = AiWorkerProps & {
+    context?: ContextKind;
+    autoRun?: boolean;
+    /** Title shown above the search input (optional). */
+    title?: string;
+    /** Optional search input. */
+    getSearchText?: () => string;
+    /** Optional base64 icon (SVG or PNG) for the search button. */
+    searchButtonIcon?: string;
+    showSearchButtonTitle?: boolean;
+    showSearchButtonIcon?: boolean;
+    /** Whether to render document cards under the summary. */
+    showSources?: boolean;
+    /** Max number of results to return. */
+    topK?: number;
+    /** Max snippet length shown per chunk. */
+    snippetMaxChars?: number;
+    /** Optional callback when clicking on a document card. */
+    onClickDoc?: (doc: RetrievedDoc) => void;
+};
+type DocSearchArgs = DocSearchProps & {
+    target?: string | HTMLElement;
+};
 type AnyCreateCoreOptions = LanguageModelCreateCoreOptions | SummarizerCreateCoreOptions | WriterCreateCoreOptions | RewriterCreateCoreOptions | ProofreaderCreateCoreOptions | LanguageDetectorCreateCoreOptions | TranslatorCreateCoreOptions;
 interface Capabilities {
     MIN_CHROME_VERSION?: Partial<Record<BuiltInAiFeature, number>>;
@@ -449,6 +526,7 @@ interface Features {
     prompt: (args: PromptArgs, options?: FeatureOptions) => Promise<PromptResult>;
     sendChatMessage: (args: ChatMessageArgs, options?: FeatureOptions) => Promise<PromptResult>;
     sendFeedbackMessage: (args: FeedbackMessageArgs, options?: FeatureOptions) => Promise<PromptResult>;
+    sendSearchMessage: (args: SearchMessageArgs, options?: FeatureOptions) => Promise<SearchResult>;
 }
 
 type AiKitReadyEvent = "wpsuite:ai-kit:ready";
@@ -462,6 +540,7 @@ declare const TEXT_DOMAIN = "smartcloud-ai-kit";
 
 declare const AiKitFeatureIcon: React.FC<React.SVGProps<SVGSVGElement>>;
 declare const AiKitChatbotIcon: React.FC<React.SVGProps<SVGSVGElement>>;
+declare const AiKitDocSearchIcon: React.FC<React.SVGProps<SVGSVGElement>>;
 
 declare const LANGUAGE_OPTIONS: {
     label: string;
@@ -486,6 +565,7 @@ declare const getPromptOptions: (...args: Parameters<Features["getPromptOptions"
 declare const prompt: (...args: Parameters<Features["prompt"]>) => Promise<PromptResult>;
 declare const sendChatMessage: (...args: Parameters<Features["sendChatMessage"]>) => Promise<PromptResult>;
 declare const sendFeedbackMessage: (...args: Parameters<Features["sendFeedbackMessage"]>) => Promise<PromptResult>;
-declare const initializeAiKit: (renderFeature: (args: AiFeatureArgs) => Promise<AiWorkerHandle>) => AiKitPlugin;
+declare const sendSearchMessage: (...args: Parameters<Features["sendSearchMessage"]>) => Promise<SearchResult>;
+declare const initializeAiKit: (renderFeature: (args: AiFeatureArgs) => Promise<AiWorkerHandle>, renderSearchComponent?: (args: DocSearchArgs) => Promise<AiWorkerHandle>) => AiKitPlugin;
 
-export { type AiChatbotLabels, type AiChatbotProps, type AiFeatureArgs, type AiFeatureMode, type AiFeatureOptions, type AiFeatureProps, type AiKit, AiKitChatbotIcon, type AiKitConfig, type AiKitErrorEvent, AiKitFeatureIcon, type AiKitFeatures, type AiKitLanguageCode, type AiKitLanguageProfile, type AiKitLanguageRef, type AiKitPlugin, type AiKitReadyEvent, type AiKitSettings, type AiKitStatusEvent, type AiKitStatusStep, type AiModePreference, type AiWorkerHandle, type AiWorkerProps, type AnyCreateCoreOptions, type Backend, type BackendCallOptions, BackendError, type BackendTransport, type BuiltInAiFeature, type Capabilities, type CapabilityDecision, type CapabilitySource, type ChatMessageArgs, type ContextKind, type CustomTranslations, type DetectLanguageArgs, type DetectLanguageOutput, type DeviceAvailability, type FeatureOptions, type Features, type FeedbackMessageArgs, type HistoryStorageMode, LANGUAGE_OPTIONS, type OnDeviceUnsupportedLanguageStrategy, type OpenButtonIconLayout, type OpenButtonPosition, type PromptArgs, type PromptImageInput, type PromptMessages, type PromptResult, type ProofreadArgs, type ProofreadOutput, type RewriteArgs, type RewriteResult, type State, type Store, type SummarizeArgs, type SummarizeResult, TEXT_DOMAIN, type TranslateArgs, type TranslateResult, type WriteArgs, type WriteResult, checkOnDeviceAvailability, decideCapability, detectLanguage, dispatchBackend, getAiKitPlugin, getMinChromeVersions, getPromptOptions, getProofreadOptions, getRewriteOptions, getStore, getStoreDispatch, getStoreSelect, getSummarizeOptions, getTranslateOptions, getWriteOptions, initializeAiKit, observeStore, prompt, proofread, rewrite, sanitizeAiKitConfig, sendChatMessage, sendFeedbackMessage, summarize, translate, waitForAiKitReady, write };
+export { type AiChatbotLabels, type AiChatbotProps, type AiFeatureArgs, type AiFeatureMode, type AiFeatureOptions, type AiFeatureProps, type AiKit, AiKitChatbotIcon, type AiKitConfig, AiKitDocSearchIcon, type AiKitErrorEvent, AiKitFeatureIcon, type AiKitFeatures, type AiKitLanguageCode, type AiKitLanguageProfile, type AiKitLanguageRef, type AiKitPlugin, type AiKitReadyEvent, type AiKitSettings, type AiKitStatusEvent, type AiKitStatusStep, type AiModePreference, type AiWorkerHandle, type AiWorkerProps, type AnyCreateCoreOptions, type Backend, type BackendCallOptions, BackendError, type BackendTransport, type BuiltInAiFeature, type Capabilities, type CapabilityDecision, type CapabilitySource, type ChatMessageArgs, type ContextKind, type CustomTranslations, type DetectLanguageArgs, type DetectLanguageOutput, type DeviceAvailability, type DocSearchArgs, type DocSearchProps, type FeatureOptions, type Features, type FeedbackMessageArgs, type HistoryStorageMode, LANGUAGE_OPTIONS, type OnDeviceUnsupportedLanguageStrategy, type OpenButtonIconLayout, type OpenButtonPosition, type ProcessedCitations, type PromptArgs, type PromptImageInput, type PromptMessages, type PromptResult, type ProofreadArgs, type ProofreadOutput, type RetrievedChunk, type RetrievedDoc, type RewriteArgs, type RewriteResult, type SearchMessageArgs, type SearchResult, type State, type Store, type SummarizeArgs, type SummarizeResult, TEXT_DOMAIN, type TranslateArgs, type TranslateResult, type WriteArgs, type WriteResult, checkOnDeviceAvailability, decideCapability, detectLanguage, dispatchBackend, getAiKitPlugin, getMinChromeVersions, getPromptOptions, getProofreadOptions, getRewriteOptions, getStore, getStoreDispatch, getStoreSelect, getSummarizeOptions, getTranslateOptions, getWriteOptions, initializeAiKit, observeStore, prompt, proofread, rewrite, sanitizeAiKitConfig, sendChatMessage, sendFeedbackMessage, sendSearchMessage, summarize, translate, waitForAiKitReady, write };

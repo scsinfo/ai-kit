@@ -45,6 +45,20 @@ declare const AiChatbot: React__default.FC<_smart_cloud_ai_kit_core.AiWorkerProp
     openButtonPosition?: _smart_cloud_ai_kit_core.OpenButtonPosition;
 } & Partial<_smart_cloud_ai_kit_core.AiWorkerProps>>;
 
+declare const DocSearch: FC<_smart_cloud_ai_kit_core.AiWorkerProps & {
+    context?: _smart_cloud_ai_kit_core.ContextKind;
+    autoRun?: boolean;
+    title?: string;
+    getSearchText?: () => string;
+    searchButtonIcon?: string;
+    showSearchButtonTitle?: boolean;
+    showSearchButtonIcon?: boolean;
+    showSources?: boolean;
+    topK?: number;
+    snippetMaxChars?: number;
+    onClickDoc?: (doc: _smart_cloud_ai_kit_core.RetrievedDoc) => void;
+} & Partial<_smart_cloud_ai_kit_core.AiWorkerProps>>;
+
 type AiRunState<T> = {
     busy: boolean;
     error: string | null;
@@ -91,4 +105,4 @@ declare function withAiKitShell<P extends object>(RootComponent: ComponentType<P
 
 declare const translations: Record<string, Record<string, string>>;
 
-export { AiChatbot, AiFeature, type AiFeatureFunction, type AiRunState, DEFAULT_CHATBOT_LABELS, type UseAiRunResult, isBackendConfigured, markdownToHtml, readDefaultOutputLanguage, stripCodeFence, translations, useAiRun, withAiKitShell };
+export { AiChatbot, AiFeature, type AiFeatureFunction, type AiRunState, DEFAULT_CHATBOT_LABELS, DocSearch, type UseAiRunResult, isBackendConfigured, markdownToHtml, readDefaultOutputLanguage, stripCodeFence, translations, useAiRun, withAiKitShell };

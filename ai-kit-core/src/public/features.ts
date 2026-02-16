@@ -18,6 +18,8 @@ import type {
   Features,
   ChatMessageArgs,
   FeedbackMessageArgs,
+  SearchMessageArgs,
+  SearchResult,
 } from "../types";
 
 export const getWriteOptions: (
@@ -108,3 +110,7 @@ export const sendFeedbackMessage: Features["sendFeedbackMessage"] = async (
   _args: FeedbackMessageArgs,
   _options?: FeatureOptions,
 ) => Promise.resolve<PromptResult>({ result: "" });
+export const sendSearchMessage: Features["sendSearchMessage"] = async (
+  _args: SearchMessageArgs,
+  _options?: FeatureOptions,
+) => Promise.resolve<SearchResult>({ result: "" });

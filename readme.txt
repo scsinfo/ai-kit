@@ -4,7 +4,7 @@ Tags: ai, chrome, seo, language, tools
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: MIT
 License URI: https://mit-license.org/
 Text Domain: smartcloud-ai-kit
@@ -191,6 +191,12 @@ AI-Kit Pro includes additional functionality (such as the AI-Kit Chatbot, backen
 
 == Changelog ==
 
+= 1.0.6 =
+PRO: Added **Doc Search** (Knowledge Base research) UI surface:
+* New **AI-Kit Doc Search** Gutenberg block (`smartcloud-ai-kit/doc-search`)
+* New **[smartcloud-ai-kit-doc-search]** shortcode for Classic Editor / page builders
+* New developer helper: `renderSearchComponent()` (UI injection) and `sendSearchMessage()` for programmatic KB search
+
 = 1.0.5 =
 Perf: Chatbot requests now reuse a successful reCAPTCHA verification for a short time window to reduce latency and verification costs.
 Admin: Added a “reCAPTCHA chat verification window (seconds)” setting (default: 120s).
@@ -214,6 +220,9 @@ Fixed the pre-run language detection/translation flow for AiFeature blocks so it
 * Pro features: Chatbot, frontend Feature block/shortcode, and backend-only/fallback hooks.
 
 == Upgrade Notice ==
+
+= 1.0.6 =
+If you use AI-Kit Pro, this update adds the new **Doc Search** front-end UI (block + shortcode) and the matching JavaScript helper (`renderSearchComponent`) for Knowledge Base search experiences.
 
 = 1.0.5 =
 Recommended if you use the Chatbot with reCAPTCHA: reduces repeated verification calls (lower latency and cost) via a short verification window, and adds Classic reCAPTCHA support.

@@ -12,6 +12,8 @@ module.exports = function (env = {}) {
         path.resolve(process.cwd(), "src", "index.tsx"),
         path.resolve(process.cwd(), "src/ai-feature", "index.tsx"),
         path.resolve(process.cwd(), "src/ai-feature", "view.tsx"),
+        path.resolve(process.cwd(), "src/doc-search", "index.tsx"),
+        path.resolve(process.cwd(), "src/doc-search", "view.tsx"),
       ],
     },
     externals: {

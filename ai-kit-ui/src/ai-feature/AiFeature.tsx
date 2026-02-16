@@ -1,6 +1,5 @@
 import {
   Alert,
-  Anchor,
   Button,
   Collapse,
   Divider,
@@ -55,6 +54,7 @@ import {
 } from "@tabler/icons-react";
 
 import { translations } from "../i18n";
+import { PoweredBy } from "../poweredBy";
 import {
   isBackendConfigured,
   readDefaultOutputLanguage,
@@ -169,54 +169,60 @@ async function parseImageMetadataFromPromptResult(
         typeof parsed.alt === "string"
           ? outputLang && outputLang !== "en"
             ? (
-              await translate(
-                {
-                  text: parsed.alt,
-                  sourceLanguage: "en",
-                  targetLanguage: outputLang,
-                },
-                featureOptions,
-              )
-            ).result
+                await translate(
+                  {
+                    text: parsed.alt,
+                    sourceLanguage: "en",
+                    targetLanguage: outputLang,
+                  },
+                  featureOptions,
+                )
+              ).result
             : parsed.alt
           : "",
       title:
         typeof parsed.title === "string"
           ? outputLang && outputLang !== "en"
             ? (
-              await translate({
-                text: parsed.title,
-                sourceLanguage: "en",
-                targetLanguage: outputLang,
-              },
-                featureOptions)
-            ).result
+                await translate(
+                  {
+                    text: parsed.title,
+                    sourceLanguage: "en",
+                    targetLanguage: outputLang,
+                  },
+                  featureOptions,
+                )
+              ).result
             : parsed.title
           : "",
       caption:
         typeof parsed.caption === "string"
           ? outputLang && outputLang !== "en"
             ? (
-              await translate({
-                text: parsed.caption,
-                sourceLanguage: "en",
-                targetLanguage: outputLang,
-              },
-                featureOptions)
-            ).result
+                await translate(
+                  {
+                    text: parsed.caption,
+                    sourceLanguage: "en",
+                    targetLanguage: outputLang,
+                  },
+                  featureOptions,
+                )
+              ).result
             : parsed.caption
           : "",
       description:
         typeof parsed.description === "string"
           ? outputLang && outputLang !== "en"
             ? (
-              await translate({
-                text: parsed.description,
-                sourceLanguage: "en",
-                targetLanguage: outputLang,
-              },
-                featureOptions)
-            ).result
+                await translate(
+                  {
+                    text: parsed.description,
+                    sourceLanguage: "en",
+                    targetLanguage: outputLang,
+                  },
+                  featureOptions,
+                )
+              ).result
             : parsed.description
           : "",
     };
@@ -244,30 +250,30 @@ async function parsePostMetadataFromPromptResult(
         typeof parsed.title === "string"
           ? outputLang && outputLang !== "en"
             ? (
-              await translate(
-                {
-                  text: parsed.title,
-                  sourceLanguage: "en",
-                  targetLanguage: outputLang,
-                },
-                featureOptions,
-              )
-            ).result
+                await translate(
+                  {
+                    text: parsed.title,
+                    sourceLanguage: "en",
+                    targetLanguage: outputLang,
+                  },
+                  featureOptions,
+                )
+              ).result
             : parsed.title
           : "",
       excerpt:
         typeof parsed.excerpt === "string"
           ? outputLang && outputLang !== "en"
             ? (
-              await translate(
-                {
-                  text: parsed.excerpt,
-                  sourceLanguage: "en",
-                  targetLanguage: outputLang,
-                },
-                featureOptions,
-              )
-            ).result
+                await translate(
+                  {
+                    text: parsed.excerpt,
+                    sourceLanguage: "en",
+                    targetLanguage: outputLang,
+                  },
+                  featureOptions,
+                )
+              ).result
             : parsed.excerpt
           : "",
     };
@@ -357,7 +363,11 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
   >(defaults?.outputFormat);
   const [outputLanguage, setOutputLanguage] = useState<
     AiKitLanguageCode | "auto" | undefined
-  >(defaults?.outputLanguage);
+  >(
+    defaults?.outputLanguage ||
+      aiKit.settings.defaultOutputLanguage ||
+      (mode === "rewrite" ? "auto" : undefined),
+  );
   const [length, setLength] = useState<
     WriterLength | RewriterLength | SummarizerLength | undefined
   >(defaults?.length);
@@ -372,33 +382,36 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
     if (language) {
       I18n.setLanguage(language || "en");
     }
-    let title;
+    if (title) {
+      return title;
+    }
+    let t;
     switch (mode) {
       default:
       case "summarize":
-        title = I18n.get("Summarize");
+        t = "Summarize";
         break;
       case "proofread":
-        title = I18n.get("Proofread");
+        t = "Proofread";
         break;
       case "write":
-        title = I18n.get("Write");
+        t = "Write";
         break;
       case "rewrite":
-        title = I18n.get("Rewrite");
+        t = "Rewrite";
         break;
       case "translate":
-        title = I18n.get("Translate");
+        t = "Translate";
         break;
       case "generatePostMetadata":
-        title = I18n.get("Generate Post Metadata");
+        t = "Generate Post Metadata";
         break;
       case "generateImageMetadata":
-        title = I18n.get("Generate Image Metadata");
+        t = "Generate Image Metadata";
         break;
     }
-    return title;
-  }, [mode, language]);
+    return t;
+  }, [title, mode, language]);
 
   const formatAiKitStatus = useCallback(
     (e: AiKitStatusEvent | null): string | null => {
@@ -466,8 +479,7 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
       case "translate":
         return (
           Boolean(text && text.trim().length > 0) &&
-          outputLanguage &&
-          detectedLanguage !== outputLanguage
+          (!outputLanguage || detectedLanguage !== outputLanguage)
         );
       case "summarize":
       case "proofread":
@@ -583,6 +595,13 @@ const AiFeatureBase: FC<AiFeatureProps & AiKitShellInjectedProps> = (props) => {
                   ? outputLanguage
                   : null) || readDefaultOutputLanguage();
               if (outLang === inputLang) {
+                console.warn(
+                  "AI Kit: input and output languages are the same",
+                  {
+                    inputLang,
+                    outLang,
+                  },
+                );
                 setError(
                   I18n.get("Input and output languages cannot be the same."),
                 );
@@ -1041,8 +1060,8 @@ Follow these additional instructions: ${instructions}`
       )?.label;
       parts.push(
         I18n.get("Output language") +
-        ": " +
-        (lang ? I18n.get(lang) : outputLanguage),
+          ": " +
+          (lang ? I18n.get(lang) : outputLanguage),
       );
     }
     if (mode === "summarize" && type && allowOverride?.type) {
@@ -1163,7 +1182,7 @@ Follow these additional instructions: ${instructions}`
             {variation === "modal" && (
               <Modal.Header style={{ zIndex: 1000 }}>
                 {getOpenButtonDefaultIcon("ai-feature-title-icon")}
-                <Modal.Title>{I18n.get(title || defaultTitle)}</Modal.Title>
+                <Modal.Title>{I18n.get(defaultTitle)}</Modal.Title>
                 <Modal.CloseButton />
               </Modal.Header>
             )}
@@ -1247,8 +1266,8 @@ Follow these additional instructions: ${instructions}`
                                 description={
                                   optionsDisplay !== "horizontal"
                                     ? I18n.get(
-                                      "The topic or subject for the AI to write about.",
-                                    )
+                                        "The topic or subject for the AI to write about.",
+                                      )
                                     : undefined
                                 }
                                 value={text || ""}
@@ -1284,8 +1303,8 @@ Follow these additional instructions: ${instructions}`
                                   description={
                                     optionsDisplay !== "horizontal"
                                       ? I18n.get(
-                                        "Additional instructions to guide the AI.",
-                                      )
+                                          "Additional instructions to guide the AI.",
+                                        )
                                       : undefined
                                   }
                                   value={instructions || ""}
@@ -1317,8 +1336,8 @@ Follow these additional instructions: ${instructions}`
                                 description={
                                   optionsDisplay !== "horizontal"
                                     ? I18n.get(
-                                      "The language of the input text.",
-                                    )
+                                        "The language of the input text.",
+                                      )
                                     : undefined
                                 }
                                 data={[
@@ -1337,6 +1356,7 @@ Follow these additional instructions: ${instructions}`
                                 onChange={(value) => {
                                   const val = value as AiKitLanguageCode;
                                   setInputLanguage(val);
+                                  setDetectedLanguage(undefined);
                                   onOptionsChanged?.({ inputLanguage: val });
                                 }}
                               />
@@ -1360,17 +1380,17 @@ Follow these additional instructions: ${instructions}`
                                 description={
                                   optionsDisplay !== "horizontal"
                                     ? I18n.get(
-                                      "The language AI-Kit should use for generated text by default (when applicable).",
-                                    )
+                                        "The language AI-Kit should use for generated text by default (when applicable).",
+                                      )
                                     : undefined
                                 }
                                 data={[
                                   ...([
                                     mode === "rewrite"
                                       ? {
-                                        value: "auto",
-                                        label: I18n.get("Auto-detect"),
-                                      }
+                                          value: "auto",
+                                          label: I18n.get("Auto-detect"),
+                                        }
                                       : undefined,
                                   ].filter(Boolean) as {
                                     value: string;
@@ -1391,6 +1411,7 @@ Follow these additional instructions: ${instructions}`
                                 onChange={(value) => {
                                   const val = value as AiKitLanguageCode;
                                   setOutputLanguage(val);
+                                  setDetectedLanguage(undefined);
                                   onOptionsChanged?.({ outputLanguage: val });
                                 }}
                               />
@@ -1460,40 +1481,40 @@ Follow these additional instructions: ${instructions}`
                                   description={
                                     optionsDisplay !== "horizontal"
                                       ? I18n.get(
-                                        "The tone or style for the AI to use.",
-                                      )
+                                          "The tone or style for the AI to use.",
+                                        )
                                       : undefined
                                   }
                                   data={
                                     mode === "write"
                                       ? [
-                                        {
-                                          value: "neutral",
-                                          label: I18n.get("Neutral"),
-                                        },
-                                        {
-                                          value: "formal",
-                                          label: I18n.get("Formal"),
-                                        },
-                                        {
-                                          value: "casual",
-                                          label: I18n.get("Casual"),
-                                        },
-                                      ]
+                                          {
+                                            value: "neutral",
+                                            label: I18n.get("Neutral"),
+                                          },
+                                          {
+                                            value: "formal",
+                                            label: I18n.get("Formal"),
+                                          },
+                                          {
+                                            value: "casual",
+                                            label: I18n.get("Casual"),
+                                          },
+                                        ]
                                       : [
-                                        {
-                                          value: "as-is",
-                                          label: I18n.get("As-Is"),
-                                        },
-                                        {
-                                          value: "more-formal",
-                                          label: I18n.get("More formal"),
-                                        },
-                                        {
-                                          value: "more-casual",
-                                          label: I18n.get("More casual"),
-                                        },
-                                      ]
+                                          {
+                                            value: "as-is",
+                                            label: I18n.get("As-Is"),
+                                          },
+                                          {
+                                            value: "more-formal",
+                                            label: I18n.get("More formal"),
+                                          },
+                                          {
+                                            value: "more-casual",
+                                            label: I18n.get("More casual"),
+                                          },
+                                        ]
                                   }
                                   value={
                                     tone ||
@@ -1533,33 +1554,33 @@ Follow these additional instructions: ${instructions}`
                                   data={
                                     mode === "write" || mode === "summarize"
                                       ? [
-                                        {
-                                          value: "short",
-                                          label: I18n.get("Short"),
-                                        },
-                                        {
-                                          value: "medium",
-                                          label: I18n.get("Medium"),
-                                        },
-                                        {
-                                          value: "long",
-                                          label: I18n.get("Long"),
-                                        },
-                                      ]
+                                          {
+                                            value: "short",
+                                            label: I18n.get("Short"),
+                                          },
+                                          {
+                                            value: "medium",
+                                            label: I18n.get("Medium"),
+                                          },
+                                          {
+                                            value: "long",
+                                            label: I18n.get("Long"),
+                                          },
+                                        ]
                                       : [
-                                        {
-                                          value: "as-is",
-                                          label: I18n.get("As-Is"),
-                                        },
-                                        {
-                                          value: "shorter",
-                                          label: I18n.get("Shorter"),
-                                        },
-                                        {
-                                          value: "longer",
-                                          label: I18n.get("Longer"),
-                                        },
-                                      ]
+                                          {
+                                            value: "as-is",
+                                            label: I18n.get("As-Is"),
+                                          },
+                                          {
+                                            value: "shorter",
+                                            label: I18n.get("Shorter"),
+                                          },
+                                          {
+                                            value: "longer",
+                                            label: I18n.get("Longer"),
+                                          },
+                                        ]
                                   }
                                   value={
                                     length ||
@@ -1597,8 +1618,8 @@ Follow these additional instructions: ${instructions}`
                                     description={
                                       optionsDisplay !== "horizontal"
                                         ? I18n.get(
-                                          "The format for the generated output.",
-                                        )
+                                            "The format for the generated output.",
+                                          )
                                         : undefined
                                     }
                                     data={[
@@ -1636,7 +1657,7 @@ Follow these additional instructions: ${instructions}`
                   {ai.busy && statusText && (
                     <AiFeatureBorder
                       enabled={variation === "modal"}
-                      working={ai.busy}
+                      working={true}
                       variation={variation}
                     >
                       <Group
@@ -1648,7 +1669,7 @@ Follow these additional instructions: ${instructions}`
                       >
                         <Loader size="sm" />
                         <Input.Label className="ai-feature-status-text">
-                          {statusText ?? "VALAMILYEN SZÖVEG"}
+                          {statusText}
                         </Input.Label>
                       </Group>
                     </AiFeatureBorder>
@@ -1659,7 +1680,7 @@ Follow these additional instructions: ${instructions}`
                     <Stack mt="md">
                       {mode === "proofread" &&
                         ((generated as ProofreadResult).corrections.length ===
-                          0 ? (
+                        0 ? (
                           <Alert color="green">
                             {I18n.get(
                               "No issues found. Your text looks great!",
@@ -1878,7 +1899,7 @@ Follow these additional instructions: ${instructions}`
                         !generated ||
                         (mode === "proofread" &&
                           (generated as ProofreadResult).corrections.length ===
-                          0)
+                            0)
                       }
                       onClick={async () => {
                         onAccept(
@@ -1903,36 +1924,7 @@ Follow these additional instructions: ${instructions}`
                     {I18n.get("Close")}
                   </Button>
                 </Group>
-                <div
-                  style={{
-                    display: aiKit.settings?.enablePoweredBy ? "flex" : "none",
-                    justifyContent: aiKit.settings?.enablePoweredBy
-                      ? "flex-end"
-                      : undefined,
-                    padding: 0,
-                    marginRight: "var(--ai-kit-spacing-sm)",
-                    marginBottom:
-                      variation === "default"
-                        ? "var(--ai-kit-spacing-sm)"
-                        : undefined,
-                  }}
-                  className={
-                    aiKit.settings?.enablePoweredBy ? undefined : "sr-only"
-                  }
-                >
-                  <Text c="p" ta="right" fs="italic" fz="xs">
-                    Powered by{" "}
-                    <Anchor
-                      href="https://wpsuite.io/ai-kit/"
-                      target="_blank"
-                      td="none"
-                      fz="xs"
-                      fw={400}
-                    >
-                      WPSuite AI-Kit
-                    </Anchor>
-                  </Text>
-                </div>
+                <PoweredBy variation={variation} />
               </AiFeatureBorder>
             </BodyComponent>
           </ContentComponent>

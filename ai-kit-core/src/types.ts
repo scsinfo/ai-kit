@@ -43,7 +43,11 @@ export interface AiKitFeatures {
   readonly prompt: Features["prompt"];
   readonly sendChatMessage: Features["sendChatMessage"];
   readonly sendFeedbackMessage: Features["sendFeedbackMessage"];
+  readonly sendSearchMessage: Features["sendSearchMessage"];
   readonly renderFeature: (args: AiFeatureArgs) => Promise<AiWorkerHandle>;
+  readonly renderSearchComponent: (
+    args: DocSearchArgs,
+  ) => Promise<AiWorkerHandle>;
 }
 
 export interface AiKitSettings {
@@ -518,6 +522,61 @@ export interface PromptResult {
   };
 }
 
+export interface RetrievedDoc {
+  docId: string;
+  title?: string;
+  description?: string;
+  author?: string;
+  sourceUrl?: string;
+}
+
+export interface RetrievedChunk {
+  docId: string;
+  chunkId: string;
+  snippet?: string;
+}
+
+export interface ProcessedCitations {
+  docs: Array<RetrievedDoc>;
+  chunks: Array<RetrievedChunk>;
+  anchors?: Array<{
+    // Minimal span shape we rely on in the frontend (backend may provide more).
+    span: { start: number; end: number };
+    chunkIds: Array<string>;
+  }>;
+}
+
+export interface SearchResult {
+  result: string;
+  sessionId?: string;
+  citations?: ProcessedCitations;
+  metadata?: {
+    modelId?: string;
+    requestId?: string;
+    inputTokens?: number;
+    outputTokens?: number;
+    usedKB?: boolean;
+    kbId?: string;
+    citationCount?: number;
+    fallbackReason?: string;
+  };
+}
+
+export interface SearchMessageArgs {
+  /** Search query in the user's language. */
+  query: string;
+  /** Optional backend session for future optimizations. */
+  sessionId?: string;
+  /** Optional shared context (defaults to AiKit settings sharedContext). */
+  sharedContext?: string;
+  knowledgeBaseId?: string;
+  /**
+   * Optional on-device tuning:
+   */
+  topK?: number;
+  temperature?: number;
+}
+
 export interface ChatMessageArgs {
   sessionId?: string;
   message?: string;
@@ -535,6 +594,39 @@ export interface FeedbackMessageArgs {
   feedbackMessageId: string;
   sessionId: string;
 }
+
+export type DocSearchProps = AiWorkerProps & {
+  context?: ContextKind;
+  autoRun?: boolean;
+
+  /** Title shown above the search input (optional). */
+  title?: string;
+
+  /** Optional search input. */
+  getSearchText?: () => string;
+
+  /** Optional base64 icon (SVG or PNG) for the search button. */
+  searchButtonIcon?: string;
+
+  showSearchButtonTitle?: boolean;
+  showSearchButtonIcon?: boolean;
+
+  /** Whether to render document cards under the summary. */
+  showSources?: boolean;
+
+  /** Max number of results to return. */
+  topK?: number;
+
+  /** Max snippet length shown per chunk. */
+  snippetMaxChars?: number;
+
+  /** Optional callback when clicking on a document card. */
+  onClickDoc?: (doc: RetrievedDoc) => void;
+};
+
+export type DocSearchArgs = DocSearchProps & {
+  target?: string | HTMLElement;
+};
 
 /* -----------------------------
  * Feature → availability options typing
@@ -652,4 +744,8 @@ export interface Features {
     args: FeedbackMessageArgs,
     options?: FeatureOptions,
   ) => Promise<PromptResult>;
+  sendSearchMessage: (
+    args: SearchMessageArgs,
+    options?: FeatureOptions,
+  ) => Promise<SearchResult>;
 }

@@ -6,7 +6,7 @@
  * Requires at least: 6.2
  * Tested up to:      6.9
  * Requires PHP:      8.1
- * Version:           1.0.5
+ * Version:           1.0.6
  * Author:            Smart Cloud Solutions Inc.
  * Author URI:        https://smart-cloud-solutions.com
  * License:           MIT
@@ -18,7 +18,7 @@
 
 namespace SmartCloud\WPSuite\AiKit;
 
-const VERSION = '1.0.5';
+const VERSION = '1.0.6';
 
 if (!defined('ABSPATH')) {
     exit;
@@ -74,6 +74,7 @@ final class AiKit
         // Register Gutenberg blocks (summarizer etc.)
         if (function_exists('register_block_type')) {
             register_block_type(SMARTCLOUD_AI_KIT_PATH . 'blocks/ai-feature');
+            register_block_type(SMARTCLOUD_AI_KIT_PATH . 'blocks/doc-search');
         }
 
         // Assets
@@ -88,12 +89,14 @@ final class AiKit
 
         // Shortcodes
         add_shortcode('smartcloud-ai-kit-feature', array($this, 'shortcodeFeature'));
+        add_shortcode('smartcloud-ai-kit-doc-search', array($this, 'shortcodeDocSearch'));
 
         // Category for custom blocks.
         add_filter('block_categories_all', array($this, 'registerBlockCategory'), 20, 2);
 
         add_filter('no_texturize_shortcodes', function ($shortcodes) {
             $shortcodes[] = 'smartcloud-ai-kit-feature';
+            $shortcodes[] = 'smartcloud-ai-kit-doc-search';
             return $shortcodes;
         });
     }
@@ -303,9 +306,141 @@ __aikitGlobal.WpSuite.constants.aiKit = {
     /**
      * Shortcode handler for [smartcloud-ai-kit-feature]
      */
-    public function shortcodeFeature($atts = array(), $content = null): string
+
+    /**
+     * Shared shortcode parsing/normalization for AI-Kit blocks.
+     *
+     * - Supports camelCase, kebab-case and snake_case attribute names.
+     * - Merges defaults + (optional) surrounding block attrs + shortcode attrs.
+     * - Decodes selected JSON-ish attributes when provided as strings.
+     * - Supports "mini-YAML" shortcode body via configB64 + configFormat.
+     *
+     * @param array  $atts
+     * @param mixed  $content
+     * @param array  $attribute_defaults
+     * @param array  $json_attrs
+     * @return array{0: array, 1: bool} [attrs, is_preview]
+     */
+    private function buildShortcodeBlockAttrs($atts, $content, array $attribute_defaults, array $json_attrs = array()): array
     {
         global $block;
+
+        $provided_atts = array_change_key_case((array) $atts, CASE_LOWER);
+
+        $block_attrs = array();
+        if (is_array($block) && isset($block['attrs']) && is_array($block['attrs'])) {
+            $block_attrs = $block['attrs'];
+        }
+
+        $is_preview = is_admin();
+        if (!$is_preview && did_action('elementor/loaded') && class_exists('\\Elementor\\Plugin')) {
+            $plugin = \Elementor\Plugin::$instance;
+            if (isset($plugin->preview) && method_exists($plugin->preview, 'is_preview_mode')) {
+                $is_preview = $plugin->preview->is_preview_mode();
+            }
+        }
+
+        $attrs = array();
+        foreach ($attribute_defaults as $attr_name => $default_value) {
+            // Support camelCase / kebab-case / snake_case variants for shortcodes
+            $slugged = preg_replace('/([a-z])([A-Z])/', '$1-$2', $attr_name);
+            $shortcode_keys = array_unique(
+                array(
+                    strtolower($attr_name),
+                    strtolower(str_replace('-', '_', $slugged)),
+                    strtolower($slugged),
+                )
+            );
+
+            $has_shortcode_value = false;
+            $shortcode_value = null;
+            foreach ($shortcode_keys as $candidate_key) {
+                if (array_key_exists($candidate_key, $provided_atts)) {
+                    $shortcode_value = $provided_atts[$candidate_key];
+                    $has_shortcode_value = true;
+                    break;
+                }
+            }
+
+            $block_value = array_key_exists($attr_name, $block_attrs) ? $block_attrs[$attr_name] : null;
+            $value = $has_shortcode_value ? $shortcode_value : ($block_value ?? $default_value);
+
+            // Decode JSON-like attributes if provided as a string in the shortcode
+            if (is_string($value)) {
+                $trimmed = trim($value);
+                if ($trimmed !== '' && in_array($attr_name, $json_attrs, true)) {
+                    $decoded = json_decode($value, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $value = $decoded;
+                    }
+                }
+            }
+
+            if (in_array($attr_name, $json_attrs, true) && is_object($value)) {
+                $value = json_decode(wp_json_encode($value), true);
+            }
+
+            // Special-case: allowOverride can contain booleans encoded as strings/numbers
+            if ($attr_name === 'allowOverride' && is_array($value)) {
+                foreach ($value as $allow_key => $allow_value) {
+                    if (is_string($allow_value)) {
+                        $lower = strtolower($allow_value);
+                        if (in_array($lower, array('true', '1', 'yes'), true)) {
+                            $value[$allow_key] = true;
+                        } elseif (in_array($lower, array('false', '0', 'no'), true)) {
+                            $value[$allow_key] = false;
+                        }
+                    } elseif (is_numeric($allow_value)) {
+                        $value[$allow_key] = ((int) $allow_value) === 1;
+                    }
+                }
+            }
+
+            // Back-compat: accept { name, color } form for the single-color "colors" map
+            if ($attr_name === 'colors' && is_array($value) && isset($value['name'], $value['color']) && count($value) === 2) {
+                $value = array(
+                    $value['name'] => $value['color'],
+                );
+            }
+
+            $attrs[$attr_name] = $value;
+        }
+
+        // Content-based config (human friendly mini-YAML)
+        $normalized_content = $this->normalize_shortcode_content($content);
+        if (is_string($normalized_content) && trim($normalized_content) !== '') {
+            // base64 (standard, not url-safe)
+            $attrs['configB64'] = base64_encode($normalized_content);
+
+            // optional: versioning to allow changing format later
+            $attrs['configFormat'] = 'yaml.v1';
+        }
+
+        return array($attrs, $is_preview);
+    }
+
+    /**
+     * Render a dynamic AI-Kit block from a shortcode.
+     *
+     * @param string $block_name
+     * @param array  $attrs
+     * @param bool   $is_preview
+     * @return string
+     */
+    private function renderShortcodeBlock(string $block_name, array $attrs, bool $is_preview): string
+    {
+        $newBlock = array(
+            'blockName' => $block_name,
+            'attrs' => $attrs,
+        );
+
+        $content = render_block($newBlock);
+        $content = str_replace("smartcloud-ai-kit-is-preview", ($is_preview ? 'true' : 'false'), $content);
+        return $content;
+    }
+
+    public function shortcodeFeature($atts = array(), $content = null): string
+    {
 
         $attribute_defaults = array(
             'mode' => null,
@@ -335,100 +470,75 @@ __aikitGlobal.WpSuite.constants.aiKit = {
             'themeOverrides' => null,
         );
 
-        $provided_atts = array_change_key_case((array) $atts, CASE_LOWER);
-        $block_attrs = array();
-        if (is_array($block) && isset($block['attrs']) && is_array($block['attrs'])) {
-            $block_attrs = $block['attrs'];
-        }
+        list($attrs, $is_preview) = $this->buildShortcodeBlockAttrs(
+            $atts,
+            $content,
+            $attribute_defaults,
+            array('allowOverride', 'default', 'colors', 'primaryShade', 'themeOverrides')
+        );
 
-        $is_preview = is_admin();
-        if (!$is_preview && did_action('elementor/loaded') && class_exists('\\Elementor\\Plugin')) {
-            $plugin = \Elementor\Plugin::$instance;
-            if (isset($plugin->preview) && method_exists($plugin->preview, 'is_preview_mode')) {
-                $is_preview = $plugin->preview->is_preview_mode();
-            }
-        }
-
-        $attrs = array();
-        foreach ($attribute_defaults as $attr_name => $default_value) {
-            $slugged = preg_replace('/([a-z])([A-Z])/', '$1-$2', $attr_name);
-            $shortcode_keys = array_unique(
-                array(
-                    strtolower($attr_name),
-                    strtolower(str_replace('-', '_', $slugged)),
-                    strtolower($slugged),
-                )
-            );
-
-            $has_shortcode_value = false;
-            $shortcode_value = null;
-            foreach ($shortcode_keys as $candidate_key) {
-                if (array_key_exists($candidate_key, $provided_atts)) {
-                    $shortcode_value = $provided_atts[$candidate_key];
-                    $has_shortcode_value = true;
-                    break;
-                }
-            }
-
-            $block_value = array_key_exists($attr_name, $block_attrs) ? $block_attrs[$attr_name] : null;
-            $value = $has_shortcode_value ? $shortcode_value : ($block_value ?? $default_value);
-
-            if (is_string($value)) {
-                $trimmed = trim($value);
-                if ($trimmed !== '' && in_array($attr_name, array('allowOverride', 'default', 'colors', 'primaryShade'), true)) {
-                    $decoded = json_decode($value, true);
-                    if (json_last_error() === JSON_ERROR_NONE) {
-                        $value = $decoded;
-                    }
-                }
-            }
-
-            if (in_array($attr_name, array('allowOverride', 'default', 'colors', 'primaryShade'), true) && is_object($value)) {
-                $value = json_decode(wp_json_encode($value), true);
-            }
-
-            if ($attr_name === 'allowOverride' && is_array($value)) {
-                foreach ($value as $allow_key => $allow_value) {
-                    if (is_string($allow_value)) {
-                        $lower = strtolower($allow_value);
-                        if (in_array($lower, array('true', '1', 'yes'), true)) {
-                            $value[$allow_key] = true;
-                        } elseif (in_array($lower, array('false', '0', 'no'), true)) {
-                            $value[$allow_key] = false;
-                        }
-                    } elseif (is_numeric($allow_value)) {
-                        $value[$allow_key] = ((int) $allow_value) === 1;
-                    }
-                }
-            }
-
-            if ($attr_name === 'colors' && is_array($value) && isset($value['name'], $value['color']) && count($value) === 2) {
-                $value = array(
-                    $value['name'] => $value['color'],
-                );
-            }
-
-            $attrs[$attr_name] = $value;
-        }
-
-        // Content-based config (human friendly mini-YAML)
-        $normalized_content = $this->normalize_shortcode_content($content);
-        if (is_string($normalized_content) && trim($normalized_content) !== '') {
-            // base64 (standard, not url-safe)
-            $attrs['configB64'] = base64_encode($normalized_content);
-
-            // optional: versioning to allow changing format later
-            $attrs['configFormat'] = 'yaml.v1';
-        }
-
-        $newBlock = [
-            'blockName' => 'smartcloud-ai-kit/feature',
-            'attrs' => $attrs,
-        ];
-        $content = render_block($newBlock);
-        $content = str_replace("smartcloud-ai-kit-is-preview", ($is_preview ? 'true' : 'false'), $content);
-        return $content;
+        return $this->renderShortcodeBlock('smartcloud-ai-kit/feature', $attrs, $is_preview);
     }
+
+
+
+    /**
+     * Shortcode handler for [smartcloud-ai-kit-doc-search]
+     *
+     * Mirrors the DocSearch (KB research) block rendering so it can be used
+     * in classic editors / page builders (e.g. Elementor) the same way as the feature shortcode.
+     *
+     * Supported attributes (shortcode keys are case-insensitive; kebab_case / snake_case variants also work):
+     * - variation (default: "default")
+     * - title
+     * - placeholder
+     * - searchButtonTitle
+     * - showSearchButtonTitle
+     * - searchButtonIcon (base64-encoded image data URI)
+     * - showSearchButtonIcon
+     * - language (default: "system")
+     * - direction (default: "auto")
+     * - colorMode (default: "light")
+     * - primaryColor
+     * - themeOverrides (JSON string or array depending on usage)
+     *
+     * Optional content: mini-YAML (same as the blocks) which will be passed as configB64.
+     */
+    public function shortcodeDocSearch($atts = array(), $content = null): string
+    {
+
+        $attribute_defaults = array(
+            'inputSelector' => null,
+            'variation' => 'default',
+            'autoRun' => null,
+            'title' => null,
+            'showSearchButtonTitle' => null,
+            'searchButtonIcon' => null,
+            'showSearchButtonIcon' => null,
+            'language' => 'system',
+            'direction' => 'auto',
+            'colorMode' => 'light',
+            'primaryColor' => null,
+            'uid' => strtolower(\function_exists('wp_generate_password') ? \wp_generate_password(8, false, false) : substr(md5(uniqid('', true)), 0, 8)),
+            'themeOverrides' => null,
+            'topK' => null,
+            'snippetMaxChars' => null,
+        );
+
+        list($attrs, $is_preview) = $this->buildShortcodeBlockAttrs(
+            $atts,
+            $content,
+            $attribute_defaults,
+            array('themeOverrides')
+        );
+
+        return $this->renderShortcodeBlock('smartcloud-ai-kit/doc-search', $attrs, $is_preview);
+    }
+
+
+
+
+
 
     /**
      * Add settings page in wp-admin.

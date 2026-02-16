@@ -1,5 +1,5 @@
 export const AiKitFeatureIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
-  props
+  props,
 ) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -30,7 +30,7 @@ export const AiKitFeatureIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
 );
 
 export const AiKitChatbotIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
-  props
+  props,
 ) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -50,5 +50,28 @@ export const AiKitChatbotIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
     <rect x="28" y="13" width="6" height="6" rx="1" />
 
     <path d="M16 24H32" />
+  </svg>
+);
+
+export const AiKitDocSearchIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
+  props,
+) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="48"
+    height="48"
+    viewBox="0 0 48 48"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path stroke="none" d="M0 0h48v48H0z" fill="none" />
+    <path d="M6 20a14 14 0 1 0 28 0a14 14 0 1 0 -28 0" />
+    <path d="M42 42l-12 -12" />
+    <path d="M20 20a3 3 0 1 0 -2.28 -4.948" />
+    <circle cx="20" cy="26" r="0.9" fill="currentColor" stroke="none" />
   </svg>
 );

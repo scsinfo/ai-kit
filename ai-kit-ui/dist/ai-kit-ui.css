@@ -185,31 +185,37 @@
 }
 
 /* ==========================================================================
-   AI Feature
+   AI Feature & Doc Search – Shared styles
    ========================================================================== */
 
-.ai-feature-root {
+.ai-feature-root,
+.doc-search-root {
   --mb-z-index: var(--ai-kit-position-z-index) !important;
   border: var(--ai-kit-border-width) solid var(--ai-kit-border-color);
   border-radius: var(--ai-kit-radius);
 }
 
-.ai-feature-root .Mantine-Paper-root {
+.ai-feature-root .Mantine-Paper-root,
+.doc-search-root .Mantine-Paper-root {
   background-color: transparent;
 }
 
-.ai-feature-title-icon {
+.ai-feature-title-icon,
+.doc-search-title-icon {
   width: 24px;
   height: 24px;
   fill: none;
   margin-right: var(--ai-kit-space-2);
 }
 
-.ai-feature-open-button-no-title {
+.ai-feature-open-button-no-title,
+.doc-search-button-no-title {
   padding-inline-start: var(--ai-kit-button-padding-x);
+  padding-inline-end: var(--ai-kit-button-padding-x);
 }
 
-.ai-feature-open-button-no-title .mantine-Button-section {
+.ai-feature-open-button-no-title .mantine-Button-section,
+.doc-search-button-no-title .mantine-Button-section {
   margin-inline-end: unset;
 }
 
@@ -835,11 +841,16 @@
 }
 
 /* Markdown formatting */
-.ai-chat-bubble p,
-.ai-chat-bubble ul,
-.ai-chat-bubble ol,
-.ai-chat-bubble pre,
-.ai-chat-bubble code {
+.ai-feature-root p,
+.doc-search-root p,
+.ai-feature-root ul,
+.doc-search-root ul,
+.ai-feature-root ol,
+.doc-search-root ol,
+.ai-feature-root pre,
+.doc-search-root pre,
+.ai-feature-root code,
+.doc-search-root code {
   margin: 0;
   word-wrap: break-word;
   overflow-wrap: break-word;

@@ -77,10 +77,6 @@ export const App: FunctionComponent<
     isPreview: boolean;
     inputSelector?: string;
     outputSelector?: string;
-    openButtonTitle?: string;
-    openButtonIcon?: string;
-    showOpenButtonTitle?: boolean;
-    showOpenButtonIcon?: boolean;
     acceptButtonTitle?: string;
     showRegenerateOnBackendButton?: boolean;
   }
@@ -89,10 +85,6 @@ export const App: FunctionComponent<
     isPreview: boolean;
     inputSelector?: string;
     outputSelector?: string;
-    openButtonTitle?: string;
-    openButtonIcon?: string;
-    showOpenButtonTitle?: boolean;
-    showOpenButtonIcon?: boolean;
     acceptButtonTitle?: string;
     showRegenerateOnBackendButton?: boolean;
   },
@@ -201,8 +193,8 @@ export const App: FunctionComponent<
           colors,
           context: isPreview ? "admin" : "frontend",
           mode: mode!,
-          variation: variation,
-          colorMode: colorMode,
+          variation,
+          colorMode,
           language,
           direction,
           themeOverrides,

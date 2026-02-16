@@ -11,6 +11,7 @@ import {
 import { createStore } from "./store";
 import {
   AiFeatureArgs,
+  DocSearchArgs,
   AiKitLanguageCode,
   AiWorkerHandle,
   type Backend,
@@ -182,8 +183,16 @@ export const sendFeedbackMessage = async (
   return module.sendFeedbackMessage(...args);
 };
 
+export const sendSearchMessage = async (
+  ...args: Parameters<Features["sendSearchMessage"]>
+) => {
+  const module = await features;
+  return module.sendSearchMessage(...args);
+};
+
 export const initializeAiKit = (
   renderFeature: (args: AiFeatureArgs) => Promise<AiWorkerHandle>,
+  renderSearchComponent?: (args: DocSearchArgs) => Promise<AiWorkerHandle>,
 ): AiKitPlugin => {
   const wp = globalThis.WpSuite;
   const aiKit = getAiKitPlugin();
@@ -198,6 +207,12 @@ export const initializeAiKit = (
     store,
     renderFeature: async (args: AiFeatureArgs) => {
       return await renderFeature({ ...args, store: await store });
+    },
+    renderSearchComponent: async (args: DocSearchArgs) => {
+      if (!renderSearchComponent) {
+        throw new Error("renderSearchComponent is not configured");
+      }
+      return await renderSearchComponent({ ...args, store: await store });
     },
     write: async (...args: Parameters<Features["write"]>) => {
       const module = await features;
@@ -252,6 +267,12 @@ export const initializeAiKit = (
     ) => {
       const module = await features;
       return module.sendFeedbackMessage(...args);
+    },
+    sendSearchMessage: async (
+      ...args: Parameters<Features["sendSearchMessage"]>
+    ) => {
+      const module = await features;
+      return module.sendSearchMessage(...args);
     },
   };
 

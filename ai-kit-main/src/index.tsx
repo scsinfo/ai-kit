@@ -2,6 +2,7 @@ import {
   AiChatbotProps,
   AiFeatureArgs,
   AiKitConfig,
+  DocSearchArgs,
   AiWorkerHandle,
   AiWorkerProps,
   AnyCreateCoreOptions,
@@ -162,6 +163,62 @@ const ChatbotComponent = (
   return <Component {...props} {...config?.chatbot} />;
 };
 
+async function renderSearchComponent(
+  args: DocSearchArgs,
+): Promise<AiWorkerHandle> {
+  const DocSearch = (
+    await import(/* webpackChunkName: "ai-kit-ui" */ "@smart-cloud/ai-kit-ui")
+  ).DocSearch;
+
+  const { target, onClickDoc, onClose, ...docSearchProps } = args;
+
+  const host =
+    (typeof target === "string" ? document.querySelector(target) : target) ??
+    document.body;
+
+  const container = document.createElement("div");
+  host.appendChild(container);
+
+  let root: Root | null = createRoot(container);
+
+  const cleanup = () => {
+    try {
+      root?.unmount();
+    } catch {
+      // ignore
+    }
+    root = null;
+    container.remove();
+  };
+
+  const handleClose = () => {
+    try {
+      onClose?.();
+    } finally {
+      cleanup();
+    }
+  };
+
+  const handle: AiWorkerHandle = {
+    container,
+    close: handleClose,
+    unmount: cleanup,
+  };
+
+  root.render(
+    <StrictMode>
+      <DocSearch
+        context="frontend"
+        {...docSearchProps}
+        onClose={handleClose}
+        onClickDoc={onClickDoc}
+      />
+    </StrictMode>,
+  );
+
+  return handle;
+}
+
 async function renderChatbot(args: AiWorkerProps): Promise<AiWorkerHandle> {
   const AiChatbot = (
     await import(/* webpackChunkName: "ai-kit-ui" */ "@smart-cloud/ai-kit-ui")
@@ -208,7 +265,7 @@ async function renderChatbot(args: AiWorkerProps): Promise<AiWorkerHandle> {
 }
 
 onDomReady(async () => {
-  const aiKit = initializeAiKit(renderFeature);
+  const aiKit = initializeAiKit(renderFeature, renderSearchComponent);
   observe();
   getStore().then((store) => {
     renderChatbot({ store, onClose: () => void 0 });
